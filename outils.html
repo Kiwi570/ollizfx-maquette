@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils OLLIZ FX</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Calculateur de taille de position, simulateur d’effet de levier, heat map des devises et horloge des sessions.">
+<meta name="theme-color" content="#0f2229">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Outils OLLIZ FX">
+<meta property="og:description" content="Calculateur de taille de position, simulateur d’effet de levier, heat map des devises et horloge des sessions.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/instrument-serif.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="assets/fonts/geist-var.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="assets/css/style.css">
+<script>(function(){var d=document.documentElement;d.classList.remove("no-js");try{if(localStorage.getItem("ollizCalm")==="1")d.classList.add("calme")}catch(e){}if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reduce")})();</script>
+</head>
+<body data-page="outils">
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="OLLIZ FX, accueil"><span class="brand-mark" aria-hidden="true"></span><span class="w">OLLIZ</span><span class="fx">FX</span></a>
+    <nav class="nav" aria-label="Navigation principale"><a href="formation.html">Parcours</a><a href="outils.html" aria-current="page">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a class="btn" href="formation.html#inscription"><span class="tick" aria-hidden="true"></span>Demander le programme</a></nav>
+    <button class="calm-toggle" type="button" aria-pressed="false" title="Réduit les animations et le mouvement"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav">Menu</button>
+  </div>
+</header>
+<div class="mobile-nav" id="mnav" hidden role="dialog" aria-label="Menu">
+  <button class="close" type="button">Fermer</button>
+  <a href="index.html">Accueil</a><a href="formation.html">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a href="formation.html#inscription">Demander le programme</a>
+</div>
+<div class="axis" aria-hidden="true"><canvas></canvas><div class="now"></div></div>
+
+<main id="contenu">
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="split">
+        <h1 class="display" data-split>Outils pour mesurer le risque</h1>
+        <p class="lead" data-reveal>Des calculs simples pour voir ce que chaque décision engage. Ils servent à apprendre : ils ne disent pas quoi trader.</p>
+      </div>
+      <figure class="visuel wide" data-scene="instruments" data-img="outils-instruments" data-alt="Carte marine, règle en laiton et compas sur une table" data-parallax data-eager data-clip><div class="parallax-inner"></div></figure>
+    </div>
+  </section>
+
+  <section class="section" id="taille" aria-labelledby="t-title">
+    <div class="wrap tool">
+      <div class="stack">
+        <h2 id="t-title" class="h2" data-split>Taille de position</h2>
+        <p class="muted">Indiquez votre capital, ce que vous acceptez de perdre et la distance de votre stop. Le calcul donne la taille de position qui respecte cette limite.</p>
+        <form class="form tool-panel" id="calc-size" novalidate aria-label="Calculateur de taille de position">
+          <div class="field"><label for="cap">Capital du compte (€)</label><input id="cap" inputmode="decimal" value="5000"></div>
+          <div class="field"><label for="risk">Risque par position (% du capital)</label><input id="risk" inputmode="decimal" value="1"></div>
+          <div class="field"><label for="pair">Paire</label><select id="pair"><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option><option>EUR/GBP</option><option>USD/CHF</option></select></div>
+          <div class="field"><label for="stop">Distance du stop-loss (pips)</label><input id="stop" inputmode="decimal" value="25"></div>
+          <div class="field"><label for="conv" id="conv-label">Cours EUR/USD (1 euro en USD)</label><input id="conv" inputmode="decimal" value="1,1"><span class="hint"><span class="example-tag">Valeur d’exemple</span> Remplacez-la par le cours du moment.</span></div>
+        </form>
+      </div>
+      <div class="tool-out" id="calc-out" aria-live="polite">
+        <p class="small muted">Taille de position, arrondie au micro-lot inférieur</p>
+        <p><span class="out-big" data-o="lots">0,00</span> <span class="h4">lot</span></p>
+        <p class="err" hidden></p>
+        <div class="out-row"><span>Montant risqué</span><b data-o="risk"></b></div>
+        <div class="out-row"><span>Valeur d’un pip pour 1 lot standard</span><b data-o="pip"></b></div>
+        <div class="out-row"><span>Taille exacte avant arrondi</span><b data-o="exact"></b></div>
+        <div class="out-row"><span>Unités de devise de base</span><b data-o="units"></b></div>
+        <div class="out-row"><span>Perte si le stop est touché</span><b data-o="loss"></b></div>
+        <p class="todo-block" data-o="warn" hidden>Au-delà de 2 % par position, une série de pertes entame vite le capital. Revoyez la section sur la règle du 1 %.</p>
+        <figure class="visuel " data-scene="chandeliers" data-img="" data-alt="Bougies qui se dessinent" data-draw data-notag style="--ratio: 21/9"></figure>
+        <p class="small muted">Un lot standard vaut 100 000 unités. Le calcul ne tient pas compte du spread, des commissions ni du slippage.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="levier" aria-labelledby="l-title">
+    <div class="wrap tool">
+      <div class="stack">
+        <h2 id="l-title" class="h2" data-split>Ce que change l’effet de levier</h2>
+        <p class="muted">Le levier agrandit la position, donc les gains comme les pertes. Pour les clients particuliers dans l’Union européenne, il est plafonné à 30:1 sur les principales paires de devises.</p>
+        <form class="form tool-panel" id="calc-lev" novalidate aria-label="Simulateur d’effet de levier">
+          <div class="field"><label for="marge">Marge engagée (€)</label><input id="marge" inputmode="decimal" value="1000"></div>
+          <div class="field"><label for="levier">Effet de levier : <output id="levier-out" for="levier">10:1</output></label><input id="levier" type="range" min="1" max="30" step="1" value="10"></div>
+          <div class="field"><label for="var">Variation du cours : <output id="var-out" for="var">1 %</output></label><input id="var" type="range" min="0.1" max="5" step="0.1" value="1"></div>
+        </form>
+      </div>
+      <div class="tool-out" id="lev-out" aria-live="polite">
+        <p class="small muted">Taille réelle de la position</p>
+        <p class="out-big" data-o="expo"></p>
+        <p class="err" hidden></p>
+        <div class="lev-bars mt-s">
+          <div class="lev-bar up"><span>Dans votre sens</span><span class="track"><span class="fill"></span></span><b data-o="up"></b></div>
+          <div class="lev-bar"><span>Contre vous</span><span class="track"><span class="fill"></span></span><b data-o="down"></b></div>
+        </div>
+        <div class="out-row"><span>Gain, en % de la marge</span><b data-o="upPct"></b></div>
+        <div class="out-row"><span>Perte, en % de la marge</span><b data-o="downPct"></b></div>
+        <div class="out-row"><span>Variation qui efface toute la marge</span><b data-o="wipe"></b></div>
+        <p class="todo-block" data-o="gone" hidden>Avec ce levier, cette variation efface toute la marge engagée. Le courtier aurait fermé la position avant.</p>
+        <figure class="visuel " data-scene="ordres" data-img="" data-alt="Niveaux d’entrée, de stop-loss et de take-profit" data-draw data-notag style="--ratio: 21/9"></figure>
+        <p class="small muted">Simulation simplifiée : sans frais, sans swap, sans appel de marge intermédiaire.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="heatmap-section" aria-labelledby="h-title">
+    <div class="wrap">
+      <div class="split">
+        <div class="stack"><h2 id="h-title" class="h2" data-split>La heat map des devises</h2>
+        <p class="muted">Chaque case compare deux devises : en vert, la devise de la ligne se renforce face à celle de la colonne ; en rouge, elle faiblit. Une lecture rapide de qui mène la séance.</p></div>
+        <p><span class="example-tag">Données fictives, à but de démonstration</span></p>
+      </div>
+      <div class="tool mt-l">
+        <div class="heatmap-wrap"><div class="heatmap" id="heatmap" role="table" aria-label="Heat map des variations entre huit devises, données fictives"></div></div>
+        <div class="stack">
+          <p class="h4">Force relative</p>
+          <div class="strength" id="strength"></div>
+          <div class="row mt-s"><button class="btn ghost" type="button" id="hm-step">Faire avancer la séance</button></div>
+          <figure class="visuel " data-scene="ecran" data-img="membre-ecran" data-alt="Écran affichant un graphique dans une pièce sombre" data-clip style="--ratio: 16/10"></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="sessions" aria-labelledby="s-title">
+    <div class="wrap">
+      <div class="sessions" data-sessions>
+        <div class="stack">
+          <h2 id="s-title" class="h2" data-split>Horloge des sessions</h2>
+          <p class="muted">Les quatre grandes places, en heure de Paris, mises à jour en direct.</p>
+          <ul class="session-list"></ul>
+          <p class="overlap-note"></p>
+        </div>
+        <div class="ring-col">
+          <div class="ring-box">
+            <figure class="visuel " data-scene="globe" data-img="sessions-globe-nuit" data-alt="La Terre de nuit vue de l’orbite, villes éclairées" data-notag></figure>
+            <svg class="ring" viewBox="-24 -24 448 448" role="img" aria-label="Horloge de 24 heures montrant les quatre sessions de marché en heure de Paris"></svg>
+            <div class="ring-center"><div><div class="clock">--:--</div><div class="where"></div></div></div>
+          </div>
+          <div class="session-controls"><label class="small muted" for="hour">Explorer la journée</label><input id="hour" type="range" min="0" max="23.75" step="0.25" value="12"><button class="btn ghost" type="button" data-now>Revenir à maintenant</button></div>
+          <p class="small muted">Horaires indicatifs selon la convention courante : de 8 h à 17 h heure locale, de 9 h à 18 h pour Tokyo. Calcul en direct, changements d’heure compris.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <h2>Apprendre avant d’engager un euro.</h2>
+        <p class="muted mt-s">OLLIZ FX SERVICES, formation au trading sur le marché des changes, à Fréjus.</p>
+        <div class="row mt-m"><a class="btn" href="formation.html#inscription"><span class="tick" aria-hidden="true"></span>Demander le programme</a></div>
+      </div>
+      <div><ul><li><a href="formation.html">Parcours de formation</a></li><li><a href="outils.html">Outils pédagogiques</a></li><li><a href="lexique.html">Lexique</a></li><li><a href="index.html#contact">Contact</a></li></ul></div>
+      <div><ul><li><a href="mentions-legales.html">Mentions légales</a></li><li><a href="mentions-legales.html#donnees">Données personnelles</a></li><li><span class="todo">Instagram : lien à compléter</span></li><li><button class="calm-toggle" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button></li></ul></div>
+    </div>
+    <p class="risk-warning"><strong>Avertissement sur les risques.</strong> Le trading sur le marché des changes et sur les CFD, en particulier avec effet de levier, comporte un risque élevé de perte rapide, pouvant aller jusqu’à la totalité du capital engagé. Les performances passées ne préjugent pas des performances futures. OLLIZ FX propose uniquement de la formation : pas de conseil en investissement personnalisé, pas de gestion de fonds, aucune promesse de gain.</p>
+    <div class="footer-bottom"><span>© 2026 OLLIZ FX SERVICES, SAS, SIREN 948 328 141</span><span>Maquette : contenus à valider par le client</span></div>
+  </div>
+</footer>
+<script src="assets/js/vendor/gsap.min.js" defer></script>
+<script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/js/vendor/SplitText.min.js" defer></script>
+<script src="assets/js/vendor/lenis.js" defer></script>
+<script src="assets/js/data.js" defer></script>
+<script src="assets/js/images.js" defer></script>
+<script src="assets/js/scenes.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/outils.js" defer></script>
+</body>
+</html>
