@@ -65,15 +65,21 @@
   const menuBtn = document.querySelector(".menu-btn");
   const mnav = document.querySelector(".mobile-nav");
   if (menuBtn && mnav) {
-    const close = () => { mnav.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); if (lenis) lenis.start(); menuBtn.focus(); };
+    const close = () => { mnav.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); html.style.overflow = ""; if (lenis) lenis.start(); menuBtn.focus(); };
     menuBtn.addEventListener("click", () => {
-      mnav.hidden = false; menuBtn.setAttribute("aria-expanded", "true"); if (lenis) lenis.stop();
+      mnav.hidden = false; menuBtn.setAttribute("aria-expanded", "true"); html.style.overflow = "hidden"; if (lenis) lenis.stop();
       const first = mnav.querySelector("a"); if (first) first.focus();
       if (hasGsap && !still) gsap.from(mnav.querySelectorAll("a"), { yPercent: 60, autoAlpha: 0, stagger: 0.05, duration: 0.6, ease: "power3.out" });
     });
     mnav.querySelector(".close").addEventListener("click", close);
-    mnav.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-    mnav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { mnav.hidden = true; if (lenis) lenis.start(); }));
+    mnav.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") return close();
+      if (e.key !== "Tab") return;
+      const f = [...mnav.querySelectorAll("a, button")]; const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    mnav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { mnav.hidden = true; html.style.overflow = ""; if (lenis) lenis.start(); }));
   }
 
   /* ---------- Mode calme ---------- */
@@ -120,28 +126,34 @@
     ch.innerHTML = '<div class="h"></div><div class="v"></div><div class="dot"></div><div class="tag-y"></div><div class="tag-x"></div>';
     document.body.appendChild(ch); html.classList.add("has-crosshair");
     const H = ch.querySelector(".h"), V = ch.querySelector(".v"), D = ch.querySelector(".dot"), TY = ch.querySelector(".tag-y"), TX = ch.querySelector(".tag-x");
-    let tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, last = "";
+    let tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, last = "", lastY = "", running = false, docH = 1;
+    const measure = () => { docH = Math.max(1, document.documentElement.scrollHeight); };
+    measure(); window.addEventListener("resize", measure); if (window.ScrollTrigger) ScrollTrigger.addEventListener("refresh", measure);
+    const wake = () => { if (!running) { running = true; requestAnimationFrame(loop); } };
     window.addEventListener("pointermove", (e) => {
       if (e.pointerType !== "mouse") return;
-      tx = e.clientX; ty = e.clientY; ch.classList.add("on");
+      tx = e.clientX; ty = e.clientY; ch.classList.add("on"); wake();
       const t = e.target.closest && e.target.closest("a, button, input, select, textarea, label, [data-cursor]");
       ch.classList.toggle("is-link", !!t);
     }, { passive: true });
     document.addEventListener("pointerleave", () => ch.classList.remove("on"));
     window.addEventListener("blur", () => ch.classList.remove("on"));
-    const loop = () => {
+    function loop() {
       x += (tx - x) * 0.32; y += (ty - y) * 0.32;
       H.style.transform = `translateY(${y}px)`; V.style.transform = `translateX(${x}px)`;
       D.style.transform = `translate(${x}px, ${y}px)`;
-      const docH = Math.max(1, document.documentElement.scrollHeight);
       const pct = ((O.scrollY() + y) / docH) * 100;
-      TY.style.top = y + "px"; TY.textContent = pct.toFixed(1).replace(".", ",") + " %";
+      const ytxt = pct.toFixed(1).replace(".", ",") + "\u00a0%";
+      TY.style.top = y + "px"; if (ytxt !== lastY) { TY.textContent = ytxt; lastY = ytxt; }
       TX.style.left = x + "px";
       const now = paris.format(new Date()); if (now !== last) { TX.textContent = now; last = now; }
+      if (Math.abs(tx - x) < 0.3 && Math.abs(ty - y) < 0.3) { running = false; return; }
       requestAnimationFrame(loop);
-    };
+    }
     H.style.top = V.style.left = D.style.left = D.style.top = "0px";
-    requestAnimationFrame(loop);
+    if (lenis) lenis.on("scroll", () => { if (ch.classList.contains("on")) { lastY = ""; wake(); } }); else window.addEventListener("scroll", wake, { passive: true });
+    setInterval(() => { if (ch.classList.contains("on")) wake(); }, 1000);
+    wake();
   }
 
   /* ---------- Axe de prix : progression de lecture ---------- */
@@ -258,7 +270,7 @@
         if (!valid) {
           ok = false;
           if (field && !err) { err = document.createElement("span"); err.className = "err"; field.appendChild(err); }
-          if (err) err.textContent = el.type === "email" && el.value ? "Adresse e-mail incomplète : vérifiez le @ et le domaine." : "Ce champ est nécessaire pour répondre à votre demande.";
+          if (err) { err.textContent = el.type === "email" && el.value ? "Adresse e-mail incomplète : vérifiez le @ et le domaine." : "Ce champ est nécessaire pour répondre à votre demande."; err.id = err.id || (el.id || el.name || "f") + "-err"; el.setAttribute("aria-describedby", err.id); }
           el.setAttribute("aria-invalid", "true");
         } else { if (err) err.remove(); el.removeAttribute("aria-invalid"); }
       });
@@ -289,8 +301,9 @@
     closeBtn.addEventListener("click", close);
     pop.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
     setTimeout(() => document.addEventListener("pointerdown", outside, true), 0);
-    if (lenis) lenis.on("scroll", () => { if (pop) { pop.remove(); pop = null; } });
   };
+  const dropPop = () => { if (pop) { pop.remove(); pop = null; } };
+  if (lenis) lenis.on("scroll", dropPop); else window.addEventListener("scroll", dropPop, { passive: true });
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-term]"); if (b) { e.preventDefault(); O.openTerm(b.dataset.term, b); } });
 
   /* ---------- Horloge des sessions de marché ---------- */
@@ -378,7 +391,8 @@
         li.querySelector(".state").textContent = on ? (live ? "Ouvert maintenant" : "Ouvert à cette heure") : (live && !open ? "Marché fermé le week-end" : "Fermé");
       });
       if (market) market.textContent = open ? "Ouvert" : "Fermé (week-end)";
-      if (range && live) range.value = vh.toFixed(2);
+      if (range) { range.value = vh.toFixed(2); range.setAttribute("aria-valuetext", fmtH(Math.round(vh * 4) / 4) + ", heure de Paris"); }
+      if (nowBtn) nowBtn.hidden = live;
     }
     O.renderSessionsFor = O.renderSessionsFor || [];
     const api = { setHour(h) { live = false; vh = ((h % 24) + 24) % 24; render(); }, setLive() { live = true; render(); }, render, isLive: () => live, drawArcs(p) { arcs.forEach((a) => (a.style.strokeDashoffset = a._len * (1 - p))); } };
@@ -404,6 +418,27 @@
     };
     upd(); setInterval(upd, 30000);
   }
+
+  /* ---------- Typographie française : espaces insécables ---------- */
+  const NB = "\u00a0";
+  const frFix = (t) => t.replace(/ ([:;!?»%€])/g, NB + "$1").replace(/« /g, "«" + NB).replace(/(\d) (h|lot|pips?)\b/g, "$1" + NB + "$2");
+  O.fr = frFix;
+  function frWalk(root) {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (w.nextNode()) { const n = w.currentNode; const p = n.parentElement; if (!p || p.closest("script, style, textarea, .crosshair, .axis")) continue; const v = frFix(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+  }
+  frWalk(document.body);
+  new MutationObserver((list) => {
+    for (const m of list) {
+      const t = m.target.nodeType === 3 ? m.target.parentElement : m.target;
+      if (!t || t.closest(".crosshair, .axis")) continue;
+      if (m.type === "characterData") { const v = frFix(m.target.nodeValue); if (v !== m.target.nodeValue) m.target.nodeValue = v; }
+      else m.addedNodes.forEach((n) => { if (n.nodeType === 3) { const v = frFix(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } else if (n.nodeType === 1) frWalk(n); });
+    }
+  }).observe(document.body, { subtree: true, childList: true, characterData: true });
+
+  /* Revenir en haut */
+  document.querySelectorAll("[data-top]").forEach((b) => b.addEventListener("click", () => { if (lenis) lenis.scrollTo(0, { duration: 1.6 }); else window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" }); const h = document.querySelector("h1"); if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); } }));
 
   /* ---------- Démarrage ---------- */
   function ready() {

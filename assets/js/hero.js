@@ -18,6 +18,7 @@ function fallback() {
 
 const hasImage = window.OLLIZ_IMAGES && window.OLLIZ_IMAGES["hero-mer-nuit"];
 const forceNoGL = /[?&]nogl\b/.test(location.search);
+const forceGL = /[?&]forcegl\b/.test(location.search);
 
 function hexToVec(hex) { const n = parseInt(hex.slice(1), 16); return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; }
 function mix(a, b, t) { return a.map((v, i) => v + (b[i] - v) * t); }
@@ -136,10 +137,15 @@ function init() {
   if (forceNoGL) return fallback();
   let renderer;
   try {
-    renderer = new Renderer({ dpr: Math.min(window.devicePixelRatio || 1, 1.5), alpha: false, antialias: false, powerPreference: "high-performance" });
+    renderer = new Renderer({ dpr: Math.max(1, Math.min(window.devicePixelRatio || 1, 1.5, 2600 / Math.max(1, host.clientWidth))), alpha: false, antialias: false, powerPreference: "high-performance" });
     if (!renderer.gl) throw new Error("WebGL indisponible");
   } catch (e) { return fallback(); }
   const gl = renderer.gl;
+  try {
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const name = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
+    if (!forceGL && /swiftshader|llvmpipe|software/i.test(name)) return fallback();
+  } catch (e) {}
   gl.clearColor(0.06, 0.13, 0.16, 1);
   gl.canvas.setAttribute("aria-hidden", "true");
   host.appendChild(gl.canvas);
@@ -175,7 +181,7 @@ function init() {
     const r = host.getBoundingClientRect();
     tx = (e.clientX - r.left) / r.width; ty = 1 - (e.clientY - r.top) / r.height;
   }, { passive: true });
-  new IntersectionObserver((en) => { visible = en[0].isIntersecting; if (visible && !O.still) requestAnimationFrame(loop); }).observe(host);
+  new IntersectionObserver((en) => { visible = en[0].isIntersecting; lastT = 0; if (visible && !O.still && !degraded) requestAnimationFrame(loop); }).observe(host);
 
   function frame(now) {
     const t = (now - t0) / 1000;
@@ -187,7 +193,13 @@ function init() {
     program.uniforms.uScroll.value = Math.min(1, sy / Math.max(1, host.offsetHeight));
     renderer.render({ scene: mesh });
   }
-  function loop(now) { if (!visible) return; frame(now); requestAnimationFrame(loop); }
+  /* Garde-fou : si l'appareil peine (moins de 25 images/s en moyenne), on passe à l'image fixe */
+  const deltas = []; let lastT = 0, degraded = false;
+  function loop(now) {
+    if (!visible || degraded) return;
+    if (lastT) { deltas.push(now - lastT); if (deltas.length === 60) { const avg = deltas.slice(10).reduce((a, b) => a + b, 0) / 50; if (avg > 40 && !forceGL) { degraded = true; gl.canvas.remove(); fallback(); return; } } }
+    lastT = now; frame(now); requestAnimationFrame(loop);
+  }
   if (O.still) { frame(performance.now() + 4000); window.addEventListener("resize", () => frame(performance.now())); }
   else requestAnimationFrame(loop);
 

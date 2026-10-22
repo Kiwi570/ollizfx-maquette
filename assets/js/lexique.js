@@ -47,13 +47,13 @@
   }
 
   /* Recherche */
-  const input = document.getElementById("lex-q"); const items = [...document.querySelectorAll(".term")]; const letters = [...document.querySelectorAll(".lex-letter")];
+  const input = document.getElementById("lex-q"); const items = [...document.querySelectorAll(".term")]; const groups = [...document.querySelectorAll(".lex-group")];
   const empty = document.querySelector(".lex-empty"); const count = document.querySelector("[data-lex-count]");
   const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   function filter() {
     const q = norm(input.value.trim()); let n = 0;
     items.forEach((it) => { const on = !q || norm(it.textContent).includes(q); it.hidden = !on; if (on) n++; });
-    letters.forEach((l) => { let sib = l.nextElementSibling, any = false; while (sib && !sib.classList.contains("lex-letter")) { if (!sib.hidden) any = true; sib = sib.nextElementSibling; } l.hidden = !any; });
+    groups.forEach((g) => { g.hidden = ![...g.querySelectorAll(".term")].some((t) => !t.hidden); });
     empty.hidden = n > 0; count.textContent = n === items.length ? `${n} définitions` : `${n} résultat${n > 1 ? "s" : ""} sur ${items.length}`;
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }

@@ -528,11 +528,12 @@
         const img = new Image(); img.decoding = "async"; img.loading = fig.hasAttribute("data-eager") ? "eager" : "lazy";
         img.alt = imgs[name].alt || fig.dataset.alt || "";
         img.src = `assets/img/${name}.webp`;
-        img.srcset = `assets/img/${name}-800.webp 800w, assets/img/${name}.webp 1800w`;
+        img.srcset = `assets/img/${name}-800.webp 800w, assets/img/${name}.webp ${imgs[name].w || 1800}w`;
+        fig.classList.add("has-img");
         img.sizes = fig.dataset.sizes || "100vw";
         if (imgs[name + "-mobile"]) {
           const pic = document.createElement("picture"), src = document.createElement("source");
-          src.media = "(max-width: 760px)"; src.srcset = `assets/img/${name}-mobile.webp`;
+          src.media = "(max-width: 760px)"; src.srcset = `assets/img/${name}-mobile.webp`; fig.classList.add("has-mobile");
           pic.appendChild(src); pic.appendChild(img); pic.style.cssText = "position:absolute;inset:0"; img.style.cssText = "width:100%;height:100%;object-fit:cover";
           host.appendChild(pic);
         } else host.appendChild(img);
@@ -546,10 +547,11 @@
         tag.setAttribute("aria-hidden", "true"); fig.appendChild(tag);
       }
       if (fig.hasAttribute("data-draw") || fig.hasAttribute("data-draw-h")) fig._p = 0;
-      paint(fig);
+      if (fig.hasAttribute("data-eager") || !lazy) paint(fig); else lazy.observe(fig);
     });
   }
-  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => document.querySelectorAll(".visuel[data-scene]").forEach(paint), 180); });
+  const lazy = "IntersectionObserver" in window ? new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { lazy.unobserve(e.target); paint(e.target); } }), { rootMargin: "900px 0px 900px 0px" }) : null;
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => document.querySelectorAll(".visuel[data-scene]").forEach((f) => { const c = f.querySelector("canvas.ph"); if (c && c._w) paint(f); }), 180); });
 
   window.OLLIZ_SCENES = { mount, paint, painters: S, colors: C, rng, walk, drawCandles, alpha, meander, grain, vignette };
 })();

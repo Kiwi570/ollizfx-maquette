@@ -12,6 +12,7 @@
 <meta property="og:title" content="Parcours OLLIZ FX">
 <meta property="og:description" content="Le parcours de formation OLLIZ FX : huit modules en deux niveaux, un test de niveau et une demande de programme.">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/instrument-serif.woff" as="font" type="font/woff" crossorigin>
 <link rel="preload" href="assets/fonts/geist-var.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="assets/css/style.css">
@@ -22,14 +23,14 @@
 <header class="header">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="OLLIZ FX, accueil"><span class="brand-mark" aria-hidden="true"></span><span class="w">OLLIZ</span><span class="fx">FX</span></a>
-    <nav class="nav" aria-label="Navigation principale"><a href="formation.html" aria-current="page">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a class="btn" href="formation.html#inscription"><span class="tick" aria-hidden="true"></span>Demander le programme</a></nav>
+    <nav class="nav" aria-label="Navigation principale"><a href="formation.html" aria-current="page">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a class="btn" href="formation.html#demande"><span class="tick" aria-hidden="true"></span>Demander le programme</a></nav>
     <button class="calm-toggle" type="button" aria-pressed="false" title="Réduit les animations et le mouvement"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav">Menu</button>
   </div>
 </header>
 <div class="mobile-nav" id="mnav" hidden role="dialog" aria-label="Menu">
   <button class="close" type="button">Fermer</button>
-  <a href="index.html">Accueil</a><a href="formation.html">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a href="formation.html#inscription">Demander le programme</a>
+  <a href="index.html">Accueil</a><a href="formation.html">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a href="formation.html#demande">Demander le programme</a>
 </div>
 <div class="axis" aria-hidden="true"><canvas></canvas><div class="now"></div></div>
 
@@ -46,18 +47,18 @@
 
   <section class="section" aria-labelledby="lv-title">
     <div class="wrap">
-      <h2 id="lv-title" class="sr-only">Les deux niveaux</h2>
+      <h2 id="lv-title" class="sr-only">Les deux niveaux du parcours</h2>
       <p class="small"><span class="todo">Programme proposé pour la maquette, à valider par OLLIZ FX</span></p>
       <div class="levels mt-m">
         <div class="level " data-reveal>
-          <h2 class="h3">Débutant</h2>
+          <h3 class="h3">Débutant</h3>
           <figure class="visuel " data-scene="chandeliers" data-img="" data-alt="Bougies qui se dessinent" data-draw data-notag style="--ratio: 16/9"></figure>
-          <div class="mod-list"><div class="qa"><h3><button type="button"><span>1. Le marché des changes</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Qui échange des devises, pourquoi, et comment se lit une paire comme EUR/USD.</p><ul><li>Lire une paire : devise de base et devise de cotation</li><li>Comprendre bid, ask et spread</li><li>Situer les quatre grandes sessions de la journée</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>2. Lire un graphique</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Chandeliers, unités de temps et tendances, sans se raconter d’histoires.</p><ul><li>Décoder un chandelier : ouverture, clôture, mèches</li><li>Changer d’unité de temps et comparer</li><li>Distinguer tendance et marché sans direction</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>3. Passer un ordre</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Au marché, limite, stop-loss, take-profit : ce que chaque ordre fait vraiment.</p><ul><li>Choisir le bon type d’ordre</li><li>Placer un stop-loss avant d’entrer</li><li>Comprendre le slippage et les gaps</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>4. Le risque d’abord</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Taille de position, levier, marge et la règle du 1 % du capital.</p><ul><li>Calculer une taille de position</li><li>Mesurer ce que le levier change</li><li>Fixer une perte maximale par jour et par position</li></ul></div></div></div></div>
+          <div class="mod-list"><div class="qa"><h4><button type="button"><span>1. Le marché des changes</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Qui échange des devises, pourquoi, et comment se lit une paire comme EUR/USD.</p><ul><li>Lire une paire : devise de base et devise de cotation</li><li>Comprendre bid, ask et spread</li><li>Situer les quatre grandes sessions de la journée</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>2. Lire un graphique</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Chandeliers, unités de temps et tendances, sans se raconter d’histoires.</p><ul><li>Décoder un chandelier : ouverture, clôture, mèches</li><li>Changer d’unité de temps et comparer</li><li>Distinguer tendance et marché sans direction</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>3. Passer un ordre</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Au marché, limite, stop-loss, take-profit : ce que chaque ordre fait vraiment.</p><ul><li>Choisir le bon type d’ordre</li><li>Placer un stop-loss avant d’entrer</li><li>Comprendre le slippage et les gaps</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>4. Le risque d’abord</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Taille de position, levier, marge et la règle du 1 % du capital.</p><ul><li>Calculer une taille de position</li><li>Mesurer ce que le levier change</li><li>Fixer une perte maximale par jour et par position</li></ul></div></div></div></div>
         </div>
         <div class="level inter" data-reveal>
-          <h2 class="h3">Intermédiaire</h2>
+          <h3 class="h3">Intermédiaire</h3>
           <figure class="visuel " data-scene="technique" data-img="" data-alt="Prix entre un support et une résistance" data-draw data-notag style="--ratio: 16/9"></figure>
-          <div class="mod-list"><div class="qa"><h3><button type="button"><span>5. Analyse technique</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Supports, résistances, indicateurs, et surtout leurs limites.</p><ul><li>Tracer des zones plutôt que des lignes</li><li>Utiliser deux ou trois indicateurs, pas dix</li><li>Savoir quand une configuration est invalidée</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>6. Analyse fondamentale</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Calendrier économique, taux d’intérêt et banques centrales.</p><ul><li>Lire un calendrier économique</li><li>Comprendre l’effet d’une décision de taux</li><li>Éviter de trader à l’aveugle pendant une annonce</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>7. Plan et journal</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Écrire ses règles, les tester sur le passé, tenir un journal.</p><ul><li>Rédiger un plan de trading d’une page</li><li>Faire un backtest honnête</li><li>Tenir un journal et le relire chaque semaine</li></ul></div></div></div><div class="qa"><h3><button type="button"><span>8. La psychologie</span><span class="sign" aria-hidden="true"></span></button></h3><div class="answer"><div><p>Accepter la perte, éviter de trop trader, tenir son plan.</p><ul><li>Reconnaître le trading de revanche</li><li>Fixer des pauses obligatoires</li><li>Mesurer sa discipline, pas seulement son résultat</li></ul></div></div></div></div>
+          <div class="mod-list"><div class="qa"><h4><button type="button"><span>5. Analyse technique</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Supports, résistances, indicateurs, et surtout leurs limites.</p><ul><li>Tracer des zones plutôt que des lignes</li><li>Utiliser deux ou trois indicateurs, pas dix</li><li>Savoir quand une configuration est invalidée</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>6. Analyse fondamentale</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Calendrier économique, taux d’intérêt et banques centrales.</p><ul><li>Lire un calendrier économique</li><li>Comprendre l’effet d’une décision de taux</li><li>Éviter de trader à l’aveugle pendant une annonce</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>7. Plan et journal</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Écrire ses règles, les tester sur le passé, tenir un journal.</p><ul><li>Rédiger un plan de trading d’une page</li><li>Faire un backtest honnête</li><li>Tenir un journal et le relire chaque semaine</li></ul></div></div></div><div class="qa"><h4><button type="button"><span>8. La psychologie</span><span class="sign" aria-hidden="true"></span></button></h4><div class="answer"><div><p>Accepter la perte, éviter de trop trader, tenir son plan.</p><ul><li>Reconnaître le trading de revanche</li><li>Fixer des pauses obligatoires</li><li>Mesurer sa discipline, pas seulement son résultat</li></ul></div></div></div></div>
         </div>
       </div>
       <div class="facts mt-l" data-stagger>
@@ -79,14 +80,14 @@
           <div class="quiz-opts"></div>
         </div>
         <div class="quiz-result" hidden>
-          <p class="small muted">Votre résultat : <span data-r-score></span></p>
+          <p class="small muted">Votre résultat : <span data-r-score></span></p>
           <p class="quiz-q mt-s" data-r-lvl></p>
           <p class="muted" data-r-txt></p>
-          <div class="row mt-m"><a class="btn" href="#inscription" data-r-go>Demander ce parcours</a><button class="btn ghost" type="button" data-r-again>Refaire le test</button></div>
+          <div class="row mt-m"><a class="btn" href="#demande" data-r-go>Demander ce parcours</a><button class="btn ghost" type="button" data-r-again>Refaire le test</button></div>
         </div>
       </div>
       <div class="stack">
-        <h2 id="n-title" class="h2" data-split>Par où commencer ?</h2>
+        <h2 id="n-title" class="h2" data-split>Par où commencer ?</h2>
         <p class="muted">Six questions, une minute. Le test vous oriente vers le niveau débutant ou intermédiaire. Il ne remplace pas un échange avec le formateur.</p>
         <figure class="visuel " data-scene="carnet" data-img="parcours-carnet" data-alt="Carnet ouvert avec des bougies dessinées au crayon" data-draw data-clip style="--ratio: 4/3"></figure>
       </div>
@@ -114,7 +115,7 @@
           </fieldset>
           <fieldset data-step hidden style="border:0;padding:0;margin:0" class="form">
             <legend class="h4">Vos disponibilités</legend>
-            <div class="field"><span class="label" id="dp-l">Quand êtes-vous disponible ?</span><div class="choice" role="group" aria-labelledby="dp-l">
+            <div class="field"><span class="label" id="dp-l">Quand êtes-vous disponible ?</span><div class="choice" role="group" aria-labelledby="dp-l">
               <label><input type="checkbox" name="dispo" value="En semaine, en journée"><span>En semaine, en journée</span></label>
               <label><input type="checkbox" name="dispo" value="En soirée"><span>En soirée</span></label>
               <label><input type="checkbox" name="dispo" value="Le week-end"><span>Le week-end</span></label></div></div>
@@ -155,13 +156,13 @@
       <div>
         <h2>Apprendre avant d’engager un euro.</h2>
         <p class="muted mt-s">OLLIZ FX SERVICES, formation au trading sur le marché des changes, à Fréjus.</p>
-        <div class="row mt-m"><a class="btn" href="formation.html#inscription"><span class="tick" aria-hidden="true"></span>Demander le programme</a></div>
+        <div class="row mt-m"><a class="btn" href="formation.html#demande"><span class="tick" aria-hidden="true"></span>Demander le programme</a></div>
       </div>
       <div><ul><li><a href="formation.html">Parcours de formation</a></li><li><a href="outils.html">Outils pédagogiques</a></li><li><a href="lexique.html">Lexique</a></li><li><a href="index.html#contact">Contact</a></li></ul></div>
-      <div><ul><li><a href="mentions-legales.html">Mentions légales</a></li><li><a href="mentions-legales.html#donnees">Données personnelles</a></li><li><span class="todo">Instagram : lien à compléter</span></li><li><button class="calm-toggle" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button></li></ul></div>
+      <div><ul><li><a href="mentions-legales.html">Mentions légales</a></li><li><a href="mentions-legales.html#donnees">Données personnelles</a></li><li><span class="todo">Instagram : lien à compléter</span></li><li><button class="calm-toggle" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button></li></ul></div>
     </div>
-    <p class="risk-warning"><strong>Avertissement sur les risques.</strong> Le trading sur le marché des changes et sur les CFD, en particulier avec effet de levier, comporte un risque élevé de perte rapide, pouvant aller jusqu’à la totalité du capital engagé. Les performances passées ne préjugent pas des performances futures. OLLIZ FX propose uniquement de la formation : pas de conseil en investissement personnalisé, pas de gestion de fonds, aucune promesse de gain.</p>
-    <div class="footer-bottom"><span>© 2026 OLLIZ FX SERVICES, SAS, SIREN 948 328 141</span><span>Maquette : contenus à valider par le client</span></div>
+    <p class="risk-warning"><strong>Avertissement sur les risques.</strong> Le trading sur le marché des changes et sur les CFD, en particulier avec effet de levier, comporte un risque élevé de perte rapide, pouvant aller jusqu’à la totalité du capital engagé. Les performances passées ne préjugent pas des performances futures. OLLIZ FX propose uniquement de la formation : pas de conseil en investissement personnalisé, pas de gestion de fonds, aucune promesse de gain.</p>
+    <div class="footer-bottom"><span>© 2026 OLLIZ FX SERVICES, SAS, SIREN 948 328 141</span><span>Maquette : contenus à valider par le client</span><button class="to-top" type="button" data-top>Revenir en haut</button></div>
   </div>
 </footer>
 <script src="assets/js/vendor/gsap.min.js" defer></script>

@@ -27,7 +27,9 @@
       stop: calc.querySelector("#stop"), conv: calc.querySelector("#conv"), convLabel: calc.querySelector("#conv-label")
     };
     const out = document.getElementById("calc-out");
-    let lastPair = f.pair.value;
+    let lastPair = f.pair.value, srT;
+    const EX = { cap: "5000", risk: "1", stop: "25", pair: "EUR/USD" };
+    calc.querySelector("[data-reset]").addEventListener("click", () => { f.cap.value = EX.cap; f.risk.value = EX.risk; f.stop.value = EX.stop; f.pair.value = EX.pair; f.conv.value = "1,1"; lastPair = EX.pair; run(); });
     function run() {
       const p = PAIRS[f.pair.value];
       if (f.pair.value !== lastPair) { f.conv.value = String(p.ex).replace(".", ","); lastPair = f.pair.value; }
@@ -41,6 +43,9 @@
       err.hidden = true;
       const r = O.positionSize(cap, risk, stop, p.pip, conv);
       out.querySelector("[data-o=lots]").textContent = nf(2).format(r.lotsRounded);
+      calc.querySelector("[data-o=lots2]").textContent = nf(2).format(r.lotsRounded) + " lot";
+      out.querySelector("[data-o=formula]").innerHTML = `Taille = risque ÷ (stop × valeur du pip)<br><b>${eur(r.risk)}</b> ÷ (<b>${nf(0).format(stop)} pips</b> × <b>${eur(r.pipValueLot)}</b>) = <b>${nf(3).format(r.lots)} lot</b>`;
+      clearTimeout(srT); srT = setTimeout(() => { out.querySelector("[data-o=sr]").textContent = `Taille de position : ${nf(2).format(r.lotsRounded)} lot, pour un risque de ${eur(r.risk)}.`; }, 700);
       out.querySelector("[data-o=risk]").textContent = eur(r.risk);
       out.querySelector("[data-o=pip]").textContent = eur(r.pipValueLot);
       out.querySelector("[data-o=exact]").textContent = nf(3).format(r.lots) + " lot";
@@ -57,16 +62,22 @@
   /* ---------- Effet de levier ---------- */
   const lev = document.getElementById("calc-lev");
   if (lev) {
-    const m = lev.querySelector("#marge"), l = lev.querySelector("#levier"), v = lev.querySelector("#var");
+    const m = lev.querySelector("#marge"), l = lev.querySelector("#lev-ratio"), v = lev.querySelector("#var");
+    let srL;
+    lev.querySelector("[data-reset]").addEventListener("click", () => { m.value = "1000"; l.value = "10"; v.value = "1"; run(); });
     const lOut = lev.querySelector("#levier-out"), vOut = lev.querySelector("#var-out");
     const res = document.getElementById("lev-out");
     function run() {
       const marge = num(m), L = num(l), pct = num(v);
       lOut.textContent = L + ":1"; vOut.textContent = nf(2).format(pct) + " %";
+      l.setAttribute("aria-valuetext", L + " pour 1"); v.setAttribute("aria-valuetext", nf(1).format(pct) + " %");
       if (!(marge > 0)) { res.querySelector(".err").hidden = false; res.querySelector(".err").textContent = "Indiquez une marge supérieure à zéro."; return; }
       res.querySelector(".err").hidden = true;
       const expo = marge * L, move = expo * pct / 100, ofMargin = (move / marge) * 100;
       res.querySelector("[data-o=expo]").textContent = eur(expo, 0);
+      lev.querySelector("[data-o=expo2]").textContent = eur(expo, 0);
+      res.querySelector("[data-o=formula]").innerHTML = `Position = marge × levier = <b>${eur(marge, 0)}</b> × <b>${L}</b> = <b>${eur(expo, 0)}</b><br>Variation de ${nf(1).format(pct)} % : <b>${eur(move)}</b>, soit <b>${nf(1).format(ofMargin)} %</b> de la marge`;
+      clearTimeout(srL); srL = setTimeout(() => { res.querySelector("[data-o=sr]").textContent = `Position de ${eur(expo, 0)}. Une variation de ${nf(1).format(pct)} % représente ${nf(1).format(Math.min(100, ofMargin))} % de la marge.`; }, 700);
       res.querySelector("[data-o=up]").textContent = "+" + eur(move);
       res.querySelector("[data-o=down]").textContent = "−" + eur(Math.min(move, marge));
       res.querySelector("[data-o=upPct]").textContent = "+" + nf(1).format(ofMargin) + " %";
@@ -86,10 +97,10 @@
     const rnd = OLLIZ_SCENES.rng(20260);
     const s = {}; CUR.forEach((c) => (s[c] = (rnd() - 0.5) * 0.8));
     const cells = {};
-    let html = '<div class="hd" aria-hidden="true"></div>' + CUR.map((c) => `<div class="hd" role="columnheader">${c}</div>`).join("");
+    let html = '<div class="hd"></div>' + CUR.map((c) => `<div class="hd">${c}</div>`).join("");
     CUR.forEach((b) => {
-      html += `<div class="hd" role="rowheader">${b}</div>`;
-      CUR.forEach((q) => { html += b === q ? `<div class="cell self" role="cell" aria-label="${b}/${q}">·</div>` : `<div class="cell" role="cell" data-p="${b}${q}"></div>`; });
+      html += `<div class="hd">${b}</div>`;
+      CUR.forEach((q) => { html += b === q ? `<div class="cell self">·</div>` : `<div class="cell" data-p="${b}${q}"></div>`; });
     });
     hm.innerHTML = html;
     hm.querySelectorAll(".cell[data-p]").forEach((c) => (cells[c.dataset.p] = c));
@@ -104,7 +115,6 @@
       CUR.forEach((b) => CUR.forEach((q) => {
         if (b === q) return; const v = s[b] - s[q]; const c = cells[b + q];
         c.style.backgroundColor = colorFor(v); c.textContent = (v > 0 ? "+" : "") + nf(2).format(v);
-        c.setAttribute("aria-label", `${b}/${q} ${(v > 0 ? "+" : "") + nf(2).format(v)} %`);
         c.style.color = Math.abs(v) > 0.7 ? "#08161b" : "";
       }));
       CUR.forEach((c) => {
