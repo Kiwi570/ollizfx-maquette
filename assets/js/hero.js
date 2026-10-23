@@ -135,6 +135,8 @@ void main(){
 function init() {
   if (!host) return;
   if (forceNoGL) return fallback();
+  // pas de WebGL : image fixe directement, sans erreur console d'OGL
+  try { const c = document.createElement("canvas"); if (!(c.getContext("webgl") || c.getContext("experimental-webgl"))) return fallback(); } catch (e) { return fallback(); }
   let renderer;
   try {
     renderer = new Renderer({ dpr: Math.max(1, Math.min(window.devicePixelRatio || 1, 1.5, 2600 / Math.max(1, host.clientWidth))), alpha: false, antialias: false, powerPreference: "high-performance" });
@@ -181,7 +183,9 @@ function init() {
     const r = host.getBoundingClientRect();
     tx = (e.clientX - r.left) / r.width; ty = 1 - (e.clientY - r.top) / r.height;
   }, { passive: true });
-  new IntersectionObserver((en) => { visible = en[0].isIntersecting; lastT = 0; if (visible && !O.still && !degraded) requestAnimationFrame(loop); }).observe(host);
+  // une seule boucle à la fois (l'observateur se déclenche aussi à l'observe initial)
+  let enCours = false;
+  new IntersectionObserver((en) => { visible = en[0].isIntersecting; lastT = 0; if (visible && !O.still && !degraded && !enCours) { enCours = true; requestAnimationFrame(loop); } }).observe(host);
 
   function frame(now) {
     const t = (now - t0) / 1000;
@@ -196,12 +200,12 @@ function init() {
   /* Garde-fou : si l'appareil peine (moins de 25 images/s en moyenne), on passe à l'image fixe */
   const deltas = []; let lastT = 0, degraded = false;
   function loop(now) {
-    if (!visible || degraded) return;
+    if (!visible || degraded) { enCours = false; return; }
     if (lastT) { deltas.push(now - lastT); if (deltas.length === 60) { const avg = deltas.slice(10).reduce((a, b) => a + b, 0) / 50; if (avg > 40 && !forceGL) { degraded = true; gl.canvas.remove(); fallback(); return; } } }
     lastT = now; frame(now); requestAnimationFrame(loop);
   }
   if (O.still) { frame(performance.now() + 4000); window.addEventListener("resize", () => frame(performance.now())); }
-  else requestAnimationFrame(loop);
+  else if (!enCours) { enCours = true; requestAnimationFrame(loop); }
 
   O.heroIntro = (dur) => {
     if (!window.gsap) { program.uniforms.uIntro.value = 1; return; }

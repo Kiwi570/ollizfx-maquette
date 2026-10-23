@@ -37,11 +37,16 @@
   O.lenis = lenis;
   O.scrollY = () => (lenis ? lenis.scroll : window.scrollY);
 
+  // ancres de la page courante, écrites « #id » ou « page.html#id » : défilement sans rechargement
+  const pageDe = (p) => p.replace(/\/index(\.html)?$/, "/").replace(/\.html$/, "");
   document.addEventListener("click", (e) => {
-    const a = e.target.closest('a[href^="#"]');
-    if (!a) return;
-    const id = a.getAttribute("href").slice(1); if (!id) return;
+    const a = e.target.closest("a[href]");
+    if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const u = new URL(a.getAttribute("href"), location.href);
+    if (u.origin !== location.origin || pageDe(u.pathname) !== pageDe(location.pathname) || !u.hash) return;
+    const id = decodeURIComponent(u.hash.slice(1)); if (!id) return;
     const target = document.getElementById(id); if (!target) return;
+    if (history.replaceState) history.replaceState(null, "", u.hash);
     e.preventDefault();
     if (lenis) lenis.scrollTo(target, { offset: -80, duration: 1.4 });
     else target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
@@ -79,7 +84,7 @@
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
-    mnav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { mnav.hidden = true; html.style.overflow = ""; if (lenis) lenis.start(); }));
+    mnav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { mnav.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); html.style.overflow = ""; if (lenis) lenis.start(); }));
   }
 
   /* ---------- Mode calme ---------- */
@@ -107,7 +112,7 @@
     }
     store.sset("ollizNav", "0");
     document.addEventListener("click", (e) => {
-      const a = e.target.closest("a[href]"); if (!a) return;
+      const a = e.target.closest("a[href]"); if (!a || e.defaultPrevented) return;
       const href = a.getAttribute("href");
       if (!href || href.startsWith("#") || a.target === "_blank" || a.hasAttribute("download") || /^(mailto|tel|sms|https?):/i.test(href) || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
@@ -357,7 +362,7 @@
     for (let h = 0; h < 24; h++) {
       const [x1, y1] = polar(200, 200, 188, h), [x2, y2] = polar(200, 200, h % 3 ? 182 : 176, h);
       g("line", { x1, y1, x2, y2, stroke: "rgba(169,186,182,0.45)", "stroke-width": 1 });
-      if (h % 3 === 0) { const [tx, ty] = polar(200, 200, 204, h); const t = g("text", { x: tx, y: ty, "text-anchor": "middle", "dominant-baseline": "middle", fill: "#6f8a8a", "font-size": 11, "font-family": "Geist Mono, monospace" }); t.textContent = String(h).padStart(2, "0"); }
+      if (h % 3 === 0) { const [tx, ty] = polar(200, 200, 204, h); const t = g("text", { x: tx, y: ty, "text-anchor": "middle", "dominant-baseline": "middle", fill: "#86a19f", "font-size": 11, "font-family": "Geist Mono, monospace" }); t.textContent = String(h).padStart(2, "0"); }
     }
     const radii = [160, 140, 120, 100];
     const arcs = wins.map((s, i) => {
@@ -445,6 +450,11 @@
     O.onReady.forEach((fn) => { try { fn(); } catch (e) { console.error(e); } });
     setupReveals();
     if (window.ScrollTrigger) { ScrollTrigger.sort && ScrollTrigger.sort(); ScrollTrigger.refresh(); }
+    // arrivée par une ancre depuis une autre page : on recale après la création des épinglages
+    if (location.hash.length > 1) {
+      const cible = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (cible) requestAnimationFrame(() => { if (lenis) lenis.scrollTo(cible, { offset: -80, immediate: true, force: true }); else cible.scrollIntoView({ block: "start" }); });
+    }
   }
   O.ready = ready;
   const start = () => (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(ready, 0));

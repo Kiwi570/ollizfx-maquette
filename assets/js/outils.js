@@ -3,7 +3,7 @@
   const O = window.OLLIZ; const G = window.gsap;
   const nf = (d) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const eur = (v, d = 2) => nf(d).format(v) + " €";
-  const num = (el) => parseFloat(String(el.value).replace(",", "."));
+  const num = (el) => parseFloat(String(el.value).replace(/[\s\u00a0\u202f]/g, "").replace(",", "."));
 
   /* ---------- Taille de position ---------- */
   const PAIRS = {
