@@ -1,46 +1,22 @@
-/* Héros : mer de nuit en WebGL (OGL). Les vagues suivent une courbe de cours,
-   des bougies se dressent sur l'horizon et se reflètent dans l'eau.
-   La teinte du ciel suit l'heure réelle à Fréjus. Repli sans WebGL : scène 2D. */
+/* Héros : la vraie baie de nuit, rendue en WebGL (OGL).
+   Les lumières de la côte deviennent des bougies de graphique qui se dressent sur l'horizon ;
+   l'eau ondule et reflète leurs couleurs ; la lanterne suit le curseur.
+   Repli sans WebGL, sur processeur graphique logiciel ou appareil trop lent : la photo fixe. */
 const OGL_BASE = window.OLLIZ_OGL || new URL("./vendor/ogl/", import.meta.url).href;
-let Renderer, Program, Mesh, Triangle;
+let Renderer, Program, Mesh, Triangle, Texture;
 
 const host = document.querySelector(".hero-gl");
 const O = window.OLLIZ || {};
+const IMGS = window.OLLIZ_IMAGES || {};
 
 function fallback() {
   if (!host) return;
-  let hz = 0.56;
-  const title = document.querySelector(".hero .display");
-  if (title) { const hr = host.getBoundingClientRect(), tr = title.getBoundingClientRect(); hz = Math.max(0.2, Math.min(0.64, (tr.top - hr.top - 18) / hr.height)); }
-  host.innerHTML = `<div class="visuel" data-scene="mer" data-img="hero-mer-nuit" data-hz="${hz.toFixed(3)}" data-notag data-eager data-alt="Mer de nuit, des bougies de graphique se reflètent sur l’eau"></div>`;
+  host.innerHTML = `<div class="visuel" data-scene="mer" data-img="hero-mer-nuit" data-notag data-eager data-sizes="100vw" data-alt="Baie méditerranéenne à l’heure bleue, lumières de la côte reflétées sur l’eau"></div>`;
   if (window.OLLIZ_SCENES) window.OLLIZ_SCENES.mount(host);
 }
 
-const hasImage = window.OLLIZ_IMAGES && window.OLLIZ_IMAGES["hero-mer-nuit"];
 const forceNoGL = /[?&]nogl\b/.test(location.search);
 const forceGL = /[?&]forcegl\b/.test(location.search);
-
-function hexToVec(hex) { const n = parseInt(hex.slice(1), 16); return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; }
-function mix(a, b, t) { return a.map((v, i) => v + (b[i] - v) * t); }
-/* Palette selon l'heure de Paris : nuit, aube, jour, crépuscule */
-function palette() {
-  const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
-  const h = (+p.find((x) => x.type === "hour").value % 24) + +p.find((x) => x.type === "minute").value / 60;
-  const keys = [
-    { h: 0, top: "#061318", low: "#15323c", glow: "#f2b64b" },
-    { h: 5, top: "#081820", low: "#1a3a45", glow: "#f2b64b" },
-    { h: 7, top: "#13283a", low: "#9a6a5a", glow: "#ffd58a" },
-    { h: 10, top: "#0f2f3b", low: "#3f7480", glow: "#fff0c4" },
-    { h: 17, top: "#0f2c38", low: "#3d6b74", glow: "#ffe2a0" },
-    { h: 19.5, top: "#0e2029", low: "#8a4a3c", glow: "#ffb36b" },
-    { h: 21.5, top: "#071419", low: "#17343e", glow: "#f2b64b" },
-    { h: 24, top: "#061318", low: "#15323c", glow: "#f2b64b" }
-  ];
-  let i = 0; while (i < keys.length - 1 && keys[i + 1].h <= h) i++;
-  const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
-  const t = b.h === a.h ? 0 : (h - a.h) / (b.h - a.h);
-  return { top: mix(hexToVec(a.top), hexToVec(b.top), t), low: mix(hexToVec(a.low), hexToVec(b.low), t), glow: mix(hexToVec(a.glow), hexToVec(b.glow), t) };
-}
 
 const vertex = /* glsl */ `
 attribute vec2 uv; attribute vec2 position; varying vec2 vUv;
@@ -48,94 +24,120 @@ void main(){ vUv = uv; gl_Position = vec4(position, 0., 1.); }`;
 
 const fragment = /* glsl */ `
 precision highp float;
-uniform float uTime; uniform vec2 uRes; uniform vec2 uMouse; uniform float uScroll; uniform float uIntro; uniform float uHz;
-uniform vec3 uTop; uniform vec3 uLow; uniform vec3 uGlow;
+uniform sampler2D uTex;      // photo de la baie
+uniform sampler2D uProf;     // profil des lumières le long de l'horizon (1 ligne)
+uniform vec4 uRect;          // position de la photo à l'écran : x, y, largeur, hauteur (px, origine en haut)
+uniform vec2 uRes;
+uniform float uHzImg;        // horizon dans la photo (0 = haut)
+uniform float uTime, uIntro, uReveal, uMouseX;
 varying vec2 vUv;
 const vec3 UP = vec3(0.475, 0.824, 0.71);
 const vec3 DOWN = vec3(0.831, 0.388, 0.247);
+const vec3 GLOW = vec3(1.0, 0.78, 0.42);
 float h1(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
 float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float n1(float x){ float i = floor(x), f = fract(x); return mix(h1(i), h1(i + 1.), f * f * (3. - 2. * f)); }
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3. - 2. * f);
   return mix(mix(h2(i), h2(i + vec2(1, 0)), u.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), u.x), u.y); }
 float fbm(float x){ float v = 0., a = .5; for (int i = 0; i < 4; i++){ v += a * n1(x); x *= 2.07; a *= .5; } return v; }
-// valeur d'une bougie k : ouverture, clôture, haut, bas (0..1)
+// une bougie k : ouverture, clôture, plus haut, plus bas (0..1)
 vec4 candle(float k){
   float o = fbm(k * .13), c = fbm((k + 1.) * .13);
-  float hi = max(o, c) + h1(k * 7.31) * .06, lo = min(o, c) - h1(k * 3.17) * .06;
-  return vec4(o, c, hi, lo);
+  return vec4(o, c, max(o, c) + h1(k * 7.31) * .07, min(o, c) - h1(k * 3.17) * .07);
 }
+float lights(float sx){ return texture2D(uProf, vec2(clamp((sx - uRect.x) / uRect.z, 0., 1.), .5)).r; }
 void main(){
-  vec2 uv = vUv; float asp = uRes.x / uRes.y; float px = 1. / uRes.y;
-  vec2 p = vec2(uv.x * asp, uv.y);
-  float hz = uHz + uScroll * .08;                      // ligne d'horizon, juste au-dessus du titre
-  vec2 m = vec2(uMouse.x * asp, uMouse.y);
-  float cw = .022;                                      // largeur d'une bougie
-  float speed = uTime * .006;
-  float X = (p.x + speed) / cw; float k = floor(X); float fx = fract(X);
-  vec4 cd = candle(k);
-  float isUp = step(cd.x, cd.y);
-  vec3 ccol = mix(DOWN, UP, isUp);
-  float base = hz + .015, H = .2 * uIntro;
-  float bTop = base + max(cd.x, cd.y) * H, bBot = base + min(cd.x, cd.y) * H;
-  float wTop = base + cd.z * H, wBot = base + max(cd.w, 0.) * H;
-  float edge = .03;
-  float bodyX = smoothstep(.2 - edge, .2, fx) * (1. - smoothstep(.8, .8 + edge, fx));
-  float wickX = 1. - smoothstep(0., .9 * px / cw, abs(fx - .5));
-  vec3 col;
-  if (uv.y >= hz) {
-    float t = smoothstep(hz, 1., uv.y);
-    col = mix(uLow, uTop, pow(t, .55));
-    // étoiles
-    vec2 sp = floor(uv * uRes / 3.);
-    float st = step(.9965, h2(sp)) * smoothstep(hz + .1, 1., uv.y) * (.5 + .5 * sin(uTime * 2. + h2(sp) * 30.));
-    col += st * .55;
-    // halo de lanterne autour du curseur
-    float d = length((p - vec2(m.x, hz)) * vec2(1., 2.6));
-    col += uGlow * exp(-d * 3.2) * .38;
-    // bougies
-    float inBody = bodyX * step(bBot, uv.y) * step(uv.y, bTop + .0015);
-    float inWick = wickX * step(wBot, uv.y) * step(uv.y, wTop);
-    float glowB = bodyX * exp(-max(0., uv.y - bTop) * 90.) * step(bBot, uv.y) * .25;
-    float fade = .55 + .45 * smoothstep(0., .35, abs(p.x - m.x));
-    fade = mix(1., fade, .0);
-    col = mix(col, ccol, clamp(inBody * .92 + inWick * .7, 0., 1.));
-    col += ccol * glowB;
-  } else {
-    float d = hz - uv.y;
-    float persp = 1. / (d * 9. + .18);
-    float wave = (n2(vec2(p.x * 2.4 * persp * .25, d * 28. * persp - uTime * .35)) - .5);
-    float ox = wave * .045 * (d * 6. + .25);
-    // reflet des bougies : on relit la colonne décalée par la houle
-    float Xr = (p.x + ox + speed) / cw; float kr = floor(Xr); float fr = fract(Xr);
-    vec4 cr = candle(kr);
-    vec3 rcol = mix(DOWN, UP, step(cr.x, cr.y));
-    float rx = smoothstep(.12, .3, fr) * (1. - smoothstep(.7, .88, fr));
-    float shimmer = smoothstep(.35, .85, n2(vec2(p.x * 60., d * 160. - uTime * 1.6)));
-    float reach = (max(cr.x, cr.y) * .2 * uIntro + .03);
-    float refl = rx * shimmer * exp(-d / max(.02, reach) * 1.2);
-    vec3 sea = mix(uLow * .62, vec3(.016, .045, .055), smoothstep(0., hz * .9, d));
-    col = sea + rcol * refl * .55;
-    // traînée lumineuse sous le curseur
-    float lane = exp(-abs(p.x + ox * 2. - m.x) * (6. + 30. * d));
-    col += uGlow * lane * shimmer * .32 * exp(-d * 2.2);
-    // houle fine
-    col += vec3(.75, .8, .8) * smoothstep(.48, .5, wave) * .03 * (1. - d * 1.6);
+  float S = uRes.y;
+  vec2 sp = vec2(vUv.x * uRes.x, (1. - vUv.y) * uRes.y);       // pixel, origine en haut
+  float hz = uRect.y + uHzImg * uRect.w;                          // horizon à l'écran
+  float up = (hz - sp.y) / S;                                      // > 0 : ciel, < 0 : eau
+  float t = uTime;
+  vec2 iuv = (sp - uRect.xy) / uRect.zw;
+  float wave = 0.;
+  if (up < 0.) {
+    float d = -up, persp = 1. / (d * 9. + .15);
+    wave = n2(vec2(sp.x / S * .6 * persp, d * 28. * persp - t * .35)) - .5;
+    float w2 = n2(vec2(sp.x / S * 2.2 * persp, d * 70. * persp - t * .7)) - .5;
+    iuv.x += (wave * .010 + w2 * .004) * (d * 3. + .12);
+    iuv.y += w2 * .0025 * d;
   }
-  // ligne d'horizon et graduation de cours
-  col += vec3(.92, .89, .83) * (1. - smoothstep(0., 1.6 * px, abs(uv.y - hz))) * .22;
-  float tick = step(.97, fract((p.x + speed) / (cw * 5.))) * (1. - smoothstep(0., 7. * px, abs(uv.y - hz + 4. * px)));
-  col += tick * .12;
-  // vignette et grain
-  vec2 q = uv - .5; col *= 1. - dot(q, q) * .55;
-  col += (h2(uv * uRes + fract(uTime) * 91.) - .5) * .035;
+  vec3 col = texture2D(uTex, iuv).rgb;
+
+  float cw = .019, speed = t * .005, Hn = .12 * uIntro, base = .004, px = 1. / S;
+  if (up > 0.) {
+    float X = (sp.x / S + speed) / cw, k = floor(X), fx = fract(X);
+    vec4 cd = candle(k);
+    float a = mix(.1, 1., lights(((k + .5) * cw - speed) * S)) * uIntro;
+    vec3 c = mix(DOWN, UP, step(cd.x, cd.y));
+    float bTop = base + max(cd.x, cd.y) * Hn, bBot = base + min(cd.x, cd.y) * Hn;
+    float wTop = base + cd.z * Hn, wBot = base + max(cd.w, 0.) * Hn;
+    float bodyX = smoothstep(.2, .25, fx) * (1. - smoothstep(.75, .8, fx));
+    float wickX = 1. - smoothstep(0., .9 * px / cw, abs(fx - .5));
+    float inBody = bodyX * step(bBot, up) * step(up, bTop + px);
+    float inWick = wickX * step(wBot, up) * step(up, wTop);
+    float mid = (bTop + bBot) * .5, hb = max((bTop - bBot) * .5, px * 2.);
+    float halo = exp(-max(0., abs(up - mid) - hb) / (Hn * .18 + px)) * exp(-pow(abs(fx - .5) * 2.2, 2.)) * .22;
+    col = mix(col, c, clamp(inBody * .9 + inWick * .55 * smoothstep(.2, .6, a), 0., 1.) * a);
+    col += c * halo * a;
+  } else {
+    float d = -up;
+    float Xr = (sp.x / S + wave * .05 * (d * 6. + .25) + speed) / cw, kr = floor(Xr), fr = fract(Xr);
+    vec4 cr = candle(kr);
+    float mr = lights(((kr + .5) * cw - speed) * S);
+    vec3 rc = mix(DOWN, UP, step(cr.x, cr.y));
+    float rx = smoothstep(.15, .32, fr) * (1. - smoothstep(.68, .85, fr));
+    float shimmer = smoothstep(.35, .85, n2(vec2(sp.x / S * 60., d * 160. - t * 1.6)));
+    float reach = max(cr.x, cr.y) * Hn + .02;
+    col += rc * rx * shimmer * exp(-d / reach * 1.1) * mix(.12, .55, mr) * uIntro;
+    float lane = exp(-abs(sp.x / S - uMouseX * uRes.x / S + wave * .09) * (7. + 30. * d));
+    col += GLOW * lane * shimmer * .16 * exp(-d * 2.4) * uIntro;
+  }
+  col += vec3(.95, .9, .8) * (1. - smoothstep(0., 1.5 * px, abs(up))) * .08 * uIntro;
+  vec2 q = vUv - .5; col *= 1. - dot(q, q) * .3;
+  col = mix(vec3(.059, .133, .161), col, uReveal);
+  col += (h2(vUv * uRes + fract(t) * 91.) - .5) * .022;
   gl_FragColor = vec4(col, 1.);
 }`;
+
+/* Profil lumineux de la côte : pour chaque colonne de la photo, l'éclat juste au-dessus de l'eau. */
+function lightProfile(img, hz) {
+  const W = 256, H = Math.round((img.naturalHeight / img.naturalWidth) * W);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, W, H);
+  const y0 = Math.max(0, Math.round((hz - 0.035) * H)), y1 = Math.min(H - 1, Math.round((hz + 0.004) * H));
+  const data = x.getImageData(0, y0, W, y1 - y0 + 1).data, rows = y1 - y0 + 1;
+  const raw = new Float32Array(W);
+  for (let i = 0; i < W; i++) {
+    let m = 0;
+    for (let r = 0; r < rows; r++) { const o = (r * W + i) * 4; const l = (data[o] * 0.299 + data[o + 1] * 0.587 + data[o + 2] * 0.114) / 255; if (l > m) m = l; }
+    raw[i] = m;
+  }
+  const out = document.createElement("canvas"); out.width = W; out.height = 1;
+  const ox = out.getContext("2d"), id = ox.createImageData(W, 1);
+  const sorted = Array.from(raw).sort((a, b) => a - b), lo = sorted[Math.floor(W * 0.2)], hi = sorted[Math.floor(W * 0.97)] || 1;
+  for (let i = 0; i < W; i++) {
+    let s = 0, n = 0;
+    for (let j = -6; j <= 6; j++) { const k = i + j; if (k >= 0 && k < W) { s += raw[k]; n++; } }
+    const v = Math.max(0, Math.min(1, (s / n - lo) / Math.max(0.05, hi - lo)));
+    id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = Math.round(Math.pow(v, 0.8) * 255); id.data[i * 4 + 3] = 255;
+  }
+  ox.putImageData(id, 0, 0);
+  return out;
+}
+
+function pickImage(cssW, cssH, dpr) {
+  if (cssW / cssH < 0.85 && IMGS["hero-mer-nuit-mobile"]) return { src: "assets/img/hero-mer-nuit-mobile.webp", meta: IMGS["hero-mer-nuit-mobile"], fx: 0.32 };
+  const m = IMGS["hero-mer-nuit"] || { w: 1672, h: 940, hz: 0.347 };
+  return { src: cssW * dpr <= 900 ? "assets/img/hero-mer-nuit-800.webp" : "assets/img/hero-mer-nuit.webp", meta: m, fx: 0.72 };
+}
+
+function loadImage(src) {
+  return new Promise((res, rej) => { const i = new Image(); i.decoding = "async"; i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
 
 function init() {
   if (!host) return;
   if (forceNoGL) return fallback();
-  // pas de WebGL : image fixe directement, sans erreur console d'OGL
   try { const c = document.createElement("canvas"); if (!(c.getContext("webgl") || c.getContext("experimental-webgl"))) return fallback(); } catch (e) { return fallback(); }
   let renderer;
   try {
@@ -148,73 +150,100 @@ function init() {
     const name = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     if (!forceGL && /swiftshader|llvmpipe|software/i.test(name)) return fallback();
   } catch (e) {}
-  gl.clearColor(0.06, 0.13, 0.16, 1);
+  gl.clearColor(0.059, 0.133, 0.161, 1);
   gl.canvas.setAttribute("aria-hidden", "true");
   host.appendChild(gl.canvas);
-  const pal = palette();
-  const geometry = new Triangle(gl);
+
+  const texOpts = { generateMipmaps: false, minFilter: gl.LINEAR, magFilter: gl.LINEAR, flipY: false, wrapS: gl.CLAMP_TO_EDGE, wrapT: gl.CLAMP_TO_EDGE };
+  const tex = new Texture(gl, texOpts), prof = new Texture(gl, texOpts);
   let program;
   try {
     program = new Program(gl, {
       vertex, fragment,
       uniforms: {
-        uTime: { value: 0 }, uHz: { value: 0.56 }, uRes: { value: [1, 1] }, uMouse: { value: [0.68, 0.5] }, uScroll: { value: 0 }, uIntro: { value: O.still ? 1 : 0 },
-        uTop: { value: pal.top }, uLow: { value: pal.low }, uGlow: { value: pal.glow }
+        uTex: { value: tex }, uProf: { value: prof }, uRect: { value: [0, 0, 1, 1] }, uRes: { value: [1, 1] }, uHzImg: { value: 0.347 },
+        uTime: { value: 0 }, uIntro: { value: O.still ? 1 : 0 }, uReveal: { value: 0 }, uMouseX: { value: 0.66 }
       }
     });
-  } catch (e) { host.innerHTML = ""; return fallback(); }
-  const mesh = new Mesh(gl, { geometry, program });
-  function resize() {
+  } catch (e) { gl.canvas.remove(); return fallback(); }
+  const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
+
+  let current = null, imgMeta = null, fx = 0.7, ready = false;
+  function layout() {
     const r = host.getBoundingClientRect();
     renderer.setSize(Math.max(1, r.width), Math.max(1, r.height));
-    program.uniforms.uRes.value = [gl.canvas.width, gl.canvas.height];
+    const W = gl.canvas.width, H = gl.canvas.height, k = W / Math.max(1, r.width);
+    program.uniforms.uRes.value = [W, H];
+    if (!imgMeta) return;
+    const iw = imgMeta.w, ih = imgMeta.h || Math.round(iw * 0.5625), hz = imgMeta.hz || 0.347;
     const title = document.querySelector(".hero .display");
-    if (title) {
-      const tr = title.getBoundingClientRect();
-      const fromBottom = 1 - (tr.top - r.top - 18) / r.height;
-      program.uniforms.uHz.value = Math.max(0.36, Math.min(0.8, fromBottom));
-    }
+    let target = H * 0.36;
+    if (title) target = (title.getBoundingClientRect().top - r.top) * k - 22 * k;
+    target = Math.max(target, 96 * k);
+    /* assez grande pour que l'horizon tombe juste au-dessus du titre, même sur un écran bas */
+    const s = Math.max(W / iw, H / ih, (H - target) / ((1 - hz) * ih)) * 1.04, dw = iw * s, dh = ih * s;
+    let oy = target - hz * dh; oy = Math.max(H - dh, Math.min(0, oy));
+    const ox = (W - dw) * fx;
+    program.uniforms.uRect.value = [ox, oy, dw, dh];
+    program.uniforms.uHzImg.value = hz;
   }
-  window.addEventListener("resize", resize); resize();
-  if (document.fonts) document.fonts.ready.then(resize);
-
-  let mx = 0.68, my = 0.5, tx = 0.68, ty = 0.5, visible = true, t0 = performance.now();
-  window.addEventListener("pointermove", (e) => {
+  async function setImage() {
     const r = host.getBoundingClientRect();
-    tx = (e.clientX - r.left) / r.width; ty = 1 - (e.clientY - r.top) / r.height;
-  }, { passive: true });
-  // une seule boucle à la fois (l'observateur se déclenche aussi à l'observe initial)
-  let enCours = false;
-  new IntersectionObserver((en) => { visible = en[0].isIntersecting; lastT = 0; if (visible && !O.still && !degraded && !enCours) { enCours = true; requestAnimationFrame(loop); } }).observe(host);
+    const pick = pickImage(r.width, r.height, Math.min(window.devicePixelRatio || 1, 2));
+    if (current === pick.src) return;
+    current = pick.src;
+    try {
+      const img = await loadImage(pick.src);
+      if (current !== pick.src) return;
+      tex.image = img; tex.needsUpdate = true;
+      prof.image = lightProfile(img, pick.meta.hz || 0.347); prof.needsUpdate = true;
+      imgMeta = pick.meta; fx = pick.fx; layout();
+      if (!ready) {
+        ready = true;
+        if (window.gsap && !O.still) gsap.to(program.uniforms.uReveal, { value: 1, duration: 1.4, ease: "power2.out" });
+        else program.uniforms.uReveal.value = 1;
+        if (O.still) frame(performance.now() + 4000);
+      }
+    } catch (e) { gl.canvas.remove(); fallback(); }
+  }
+  let rt;
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { layout(); setImage(); if (O.still) frame(performance.now()); }, 120); });
+  layout(); setImage();
+  if (document.fonts) document.fonts.ready.then(layout);
+
+  let mx = 0.66, tx = 0.66, visible = true, t0 = performance.now();
+  window.addEventListener("pointermove", (e) => { const r = host.getBoundingClientRect(); tx = (e.clientX - r.left) / r.width; }, { passive: true });
 
   function frame(now) {
     const t = (now - t0) / 1000;
-    if (!O.fine) { tx = 0.5 + Math.sin(t * 0.13) * 0.3; }
-    mx += (tx - mx) * 0.05; my += (ty - my) * 0.05;
+    if (!O.fine) tx = 0.55 + Math.sin(t * 0.13) * 0.28;
+    mx += (tx - mx) * 0.05;
     program.uniforms.uTime.value = t;
-    program.uniforms.uMouse.value = [mx, my];
+    program.uniforms.uMouseX.value = mx;
     const sy = O.scrollY ? O.scrollY() : window.scrollY;
-    program.uniforms.uScroll.value = Math.min(1, sy / Math.max(1, host.offsetHeight));
+    if (!O.still) host.style.transform = sy > 0 ? `translate3d(0, ${Math.min(sy, host.offsetHeight) * 0.3}px, 0)` : "";
     renderer.render({ scene: mesh });
   }
-  /* Garde-fou : si l'appareil peine (moins de 25 images/s en moyenne), on passe à l'image fixe */
-  const deltas = []; let lastT = 0, degraded = false;
+  /* une seule boucle à la fois ; garde-fou si l'appareil peine (moins de 25 images/s en moyenne) */
+  let enCours = false, lastT = 0, degraded = false; const deltas = [];
   function loop(now) {
     if (!visible || degraded) { enCours = false; return; }
-    if (lastT) { deltas.push(now - lastT); if (deltas.length === 60) { const avg = deltas.slice(10).reduce((a, b) => a + b, 0) / 50; if (avg > 40 && !forceGL) { degraded = true; gl.canvas.remove(); fallback(); return; } } }
+    if (lastT && ready) { deltas.push(now - lastT); if (deltas.length === 60) { const avg = deltas.slice(10).reduce((a, b) => a + b, 0) / 50; if (avg > 40 && !forceGL) { degraded = true; gl.canvas.remove(); host.style.transform = ""; fallback(); return; } } }
     lastT = now; frame(now); requestAnimationFrame(loop);
   }
-  if (O.still) { frame(performance.now() + 4000); window.addEventListener("resize", () => frame(performance.now())); }
+  new IntersectionObserver((en) => { visible = en[0].isIntersecting; lastT = 0; if (visible && !O.still && !degraded && !enCours) { enCours = true; requestAnimationFrame(loop); } }).observe(host);
+  if (O.still) { frame(performance.now() + 4000); }
   else if (!enCours) { enCours = true; requestAnimationFrame(loop); }
 
   O.heroIntro = (dur) => {
     if (!window.gsap) { program.uniforms.uIntro.value = 1; return; }
-    gsap.to(program.uniforms.uIntro, { value: 1, duration: dur || 1.6, ease: "power3.out" });
+    gsap.to(program.uniforms.uIntro, { value: 1, duration: dur || 1.6, ease: "power3.out", delay: 0.15 });
   };
   if (O.pendingHeroIntro) O.heroIntro(O.pendingHeroIntro);
 }
+
 if (host && !forceNoGL) {
-  Promise.all(["core/Renderer.js", "core/Program.js", "core/Mesh.js", "extras/Triangle.js"].map((f) => import(OGL_BASE + f)))
-    .then(([a, b, c, d]) => { Renderer = a.Renderer; Program = b.Program; Mesh = c.Mesh; Triangle = d.Triangle; init(); })
+  Promise.all(["core/Renderer.js", "core/Program.js", "core/Mesh.js", "extras/Triangle.js", "core/Texture.js"].map((f) => import(OGL_BASE + f)))
+    .then(([a, b, c, d, e]) => { Renderer = a.Renderer; Program = b.Program; Mesh = c.Mesh; Triangle = d.Triangle; Texture = e.Texture; init(); })
     .catch(() => fallback());
 } else init();

@@ -57,6 +57,7 @@
     function go(n, initial) {
       steps.forEach((s, k) => (s.hidden = k !== n));
       chips.forEach((c, k) => { c.classList.toggle("on", k === n); c.classList.toggle("done", k < n); });
+      const fp = form.querySelector(".form-progress i"); if (fp) fp.style.width = ((n + 1) / steps.length) * 100 + "%";
       cur = n;
       if (n === steps.length - 1) recap();
       if (initial) return;

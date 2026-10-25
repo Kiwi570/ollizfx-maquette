@@ -113,12 +113,12 @@
     };
     function paint() {
       CUR.forEach((b) => CUR.forEach((q) => {
-        if (b === q) return; const v = s[b] - s[q]; const c = cells[b + q];
+        if (b === q) return; let v = s[b] - s[q]; if (Math.abs(v) < 0.005) v = 0; const c = cells[b + q];
         c.style.backgroundColor = colorFor(v); c.textContent = (v > 0 ? "+" : "") + nf(2).format(v);
         c.style.color = Math.abs(v) > 0.7 ? "#08161b" : "";
       }));
       CUR.forEach((c) => {
-        const v = s[c], i = bars.querySelector(`i[data-c="${c}"]`), k = Math.min(1, Math.abs(v) / 0.8) * 50;
+        const v = Math.abs(s[c]) < 0.005 ? 0 : s[c], i = bars.querySelector(`i[data-c="${c}"]`), k = Math.min(1, Math.abs(v) / 0.8) * 50;
         i.style.left = v >= 0 ? "50%" : 50 - k + "%"; i.style.width = k + "%"; i.style.background = v >= 0 ? "var(--hausse)" : "var(--baisse)";
         bars.querySelector(`[data-v="${c}"]`).textContent = (v > 0 ? "+" : "") + nf(2).format(v) + " %";
       });

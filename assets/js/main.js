@@ -107,7 +107,7 @@
     if (store.sget("ollizNav") === "1") {
       curtain.classList.add("cover");
       gsap.set(spans, { transformOrigin: "50% 0%" });
-      gsap.to(spans, { scaleY: 0, duration: 0.7, ease: "power3.inOut", stagger: { each: 0.035, from: "center" }, delay: 0.05,
+      gsap.to(spans, { scaleY: 0, duration: 0.5, ease: "power3.inOut", stagger: { each: 0.022, from: "center" }, delay: 0.02,
         onComplete: () => curtain.classList.remove("cover") });
     }
     store.sset("ollizNav", "0");
@@ -118,7 +118,7 @@
       e.preventDefault();
       store.sset("ollizNav", "1");
       gsap.set(spans, { transformOrigin: "50% 100%", scaleY: 0 });
-      gsap.to(spans, { scaleY: 1, duration: 0.55, ease: "power3.inOut", stagger: { each: 0.03, from: "edges" }, onComplete: () => { window.location.href = href; } });
+      gsap.to(spans, { scaleY: 1, duration: 0.38, ease: "power3.in", stagger: { each: 0.018, from: "edges" }, onComplete: () => { window.location.href = href; } });
     });
     window.addEventListener("pageshow", (e) => { if (e.persisted) gsap.set(spans, { scaleY: 0 }); });
   }
@@ -130,6 +130,7 @@
     const ch = document.createElement("div"); ch.className = "crosshair"; ch.setAttribute("aria-hidden", "true");
     ch.innerHTML = '<div class="h"></div><div class="v"></div><div class="dot"></div><div class="tag-y"></div><div class="tag-x"></div>';
     document.body.appendChild(ch); html.classList.add("has-crosshair");
+    const ZONES = ".hero, .ring-box, .mosaic, .heatmap-wrap, .module .visuel, .tool-out .visuel, .diagram, .map";
     const H = ch.querySelector(".h"), V = ch.querySelector(".v"), D = ch.querySelector(".dot"), TY = ch.querySelector(".tag-y"), TX = ch.querySelector(".tag-x");
     let tx = innerWidth / 2, ty = innerHeight / 2, x = tx, y = ty, last = "", lastY = "", running = false, docH = 1;
     const measure = () => { docH = Math.max(1, document.documentElement.scrollHeight); };
@@ -137,9 +138,12 @@
     const wake = () => { if (!running) { running = true; requestAnimationFrame(loop); } };
     window.addEventListener("pointermove", (e) => {
       if (e.pointerType !== "mouse") return;
-      tx = e.clientX; ty = e.clientY; ch.classList.add("on"); wake();
-      const t = e.target.closest && e.target.closest("a, button, input, select, textarea, label, [data-cursor]");
-      ch.classList.toggle("is-link", !!t);
+      tx = e.clientX; ty = e.clientY;
+      const zone = e.target.closest && e.target.closest(ZONES);
+      const inter = e.target.closest && e.target.closest("a, button, input, select, textarea, label, summary, [data-cursor]");
+      const on = !!zone && !inter;
+      ch.classList.toggle("on", on); html.classList.toggle("cross-active", on);
+      if (on) wake();
     }, { passive: true });
     document.addEventListener("pointerleave", () => ch.classList.remove("on"));
     window.addEventListener("blur", () => ch.classList.remove("on"));
@@ -211,8 +215,8 @@
     if (still || !hasGsap || !window.ScrollTrigger) return;
     document.querySelectorAll("[data-split]").forEach((el) => {
       if (!window.SplitText || el.closest(".hero")) return;
-      const split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "sl" });
-      gsap.from(split.lines, { yPercent: 105, duration: 1.1, ease: "expo.out", stagger: 0.08, scrollTrigger: { trigger: el, start: "top 86%", once: true } });
+      const split = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "sl", reduceWhiteSpace: false });
+      gsap.from(split.lines, { yPercent: 105, duration: 1.1, ease: "expo.out", stagger: 0.08, scrollTrigger: { trigger: el, start: "top 86%", once: true }, onComplete: () => split.revert() });
     });
     document.querySelectorAll("[data-reveal]").forEach((el) => {
       gsap.from(el, { y: 36, autoAlpha: 0, duration: 1, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
@@ -373,6 +377,7 @@
     });
     const needle = g("line", { x1: 200, y1: 200, x2: 200, y2: 18, stroke: "#ece4d4", "stroke-width": 1.4 });
     const knob = g("circle", { cx: 200, cy: 18, r: 5, fill: "#f2b64b" });
+    const ghost = g("line", { x1: 200, y1: 200, x2: 200, y2: 26, stroke: "rgba(236,228,212,0.45)", "stroke-width": 1, "stroke-dasharray": "3 4" });
     g("circle", { cx: 200, cy: 200, r: 90, fill: "#0f2229" });
     root._arcs = arcs;
     list.innerHTML = wins.map((s) => `<li data-id="${s.id}" style="--c:${s.c}"><span class="sw"></span><span><span class="name">${s.name}</span><span class="state"></span></span><span class="hours">${fmtH(s.from)} à ${fmtH(s.to)}</span></li>`).join("");
@@ -387,7 +392,9 @@
       needle.setAttribute("transform", `rotate(${ang} 200 200)`); knob.setAttribute("transform", `rotate(${ang} 200 200)`);
       const hh = Math.floor(vh), mm = Math.floor((vh - hh) * 60);
       clock.textContent = live ? new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(now) : `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
-      where.textContent = live ? "Heure de Paris, maintenant" : "Heure de Paris, un jour de semaine";
+      const nowTxt = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(now);
+      where.textContent = live ? "Heure de Paris, maintenant" : `Exploration. Il est ${nowTxt} à Paris`;
+      ghost.style.display = live ? "none" : ""; ghost.setAttribute("transform", `rotate(${(parisHour(now.getTime()) / 24) * 360} 200 200)`);
       const open = live ? marketOpen(now) : true;
       wins.forEach((s, i) => {
         const on = live ? s.live : inArc(vh, s.from, s.to);

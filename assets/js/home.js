@@ -10,8 +10,8 @@
     if (still) return;
     const title = document.querySelector(".hero .display");
     if (title && window.SplitText) {
-      const s = SplitText.create(title, { type: "lines", mask: "lines" });
-      G.from(s.lines, { yPercent: 108, duration: 1.3, ease: "expo.out", stagger: 0.1 });
+      const s = SplitText.create(title, { type: "lines", mask: "lines", reduceWhiteSpace: false });
+      G.from(s.lines, { yPercent: 108, duration: 1.2, ease: "expo.out", stagger: 0.1, onComplete: () => s.revert() });
     }
     G.from(".hero [data-hero-fade]", { y: 24, autoAlpha: 0, duration: 1, ease: "power3.out", stagger: 0.08, delay: 0.35 });
   }
@@ -26,13 +26,15 @@
     const word = el.querySelector(".word");
     const chars = window.SplitText ? SplitText.create(word, { type: "chars" }).chars : [word];
     G.set(el.querySelector(".candle"), { height: 0 });
-    tl.from(el.querySelector(".horizon"), { scaleX: 0, duration: 0.6, ease: "expo.inOut" })
-      .to(el.querySelector(".candle"), { height: 86, duration: 0.7, ease: "expo.out" }, "-=0.15")
-      .from(el.querySelector(".wick"), { scaleY: 0, duration: 0.5, ease: "power3.out" }, "<0.1")
-      .from(chars, { yPercent: 90, autoAlpha: 0, duration: 0.5, stagger: 0.025, ease: "power3.out" }, "-=0.45")
-      .to(el.querySelector(".candle"), { height: 4, y: 0, duration: 0.35, ease: "power3.in" }, "+=0.15")
-      .to(el, { autoAlpha: 0, duration: 0.5, ease: "power2.inOut" }, "-=0.1")
-      .add(() => heroIn(false), "-=0.45");
+    tl.from(el.querySelector(".horizon"), { scaleX: 0, duration: 0.45, ease: "expo.inOut" })
+      .to(el.querySelector(".candle"), { height: 86, duration: 0.5, ease: "expo.out" }, "-=0.12")
+      .from(el.querySelector(".wick"), { scaleY: 0, duration: 0.35, ease: "power3.out" }, "<0.05")
+      .from(chars, { yPercent: 90, autoAlpha: 0, duration: 0.35, stagger: 0.018, ease: "power3.out" }, "-=0.35")
+      .to(el.querySelector(".candle"), { height: 4, y: 0, duration: 0.25, ease: "power3.in" }, "+=0.08")
+      .to(el, { autoAlpha: 0, duration: 0.4, ease: "power2.inOut" }, "-=0.08")
+      .add(() => heroIn(false), "-=0.35");
+    const skip = () => { tl.timeScale(6); ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => window.removeEventListener(t, skip)); };
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => window.addEventListener(t, skip, { passive: true }));
   }
 
   /* ---------- Bandeau du lexique ---------- */
@@ -67,7 +69,7 @@
       "(min-width: 900px) and (min-height: 760px)": () => {
         let start = 0;
         const st = ST.create({
-          trigger: sec, start: "top top", end: "+=140%", pin: true, scrub: 0.6,
+          trigger: sec, start: "top top", end: "+=100%", pin: true, scrub: 0.6,
           onEnter: () => { start = O.sessions.parisHour(Date.now()); },
           onEnterBack: () => { start = O.sessions.parisHour(Date.now()); },
           onUpdate: (self) => { if (self.progress > 0.002 && self.progress < 0.998) api.setHour(start + self.progress * 24); },
@@ -87,7 +89,7 @@
     const drawOne = (f) => { const s = { p: f._p || 0 }; G.to(s, { p: 1, duration: 1.6, ease: "power2.inOut", onUpdate: () => { f._p = s.p; OLLIZ_SCENES.paint(f); } }); };
     if (still || !ST) { scroller.style.overflowX = "auto"; drawAll(); return; }
     ST.matchMedia({
-      "(min-width: 760px)": () => {
+      "(min-width: 760px) and (min-aspect-ratio: 1/1)": () => {
         const dist = () => track.scrollWidth - scroller.clientWidth;
         const prog = sec.querySelector(".hprogress"), bar = prog && prog.querySelector("i"), count = prog && prog.querySelector(".count");
         const cards = [...track.querySelectorAll(".module")];
@@ -111,10 +113,22 @@
         track.addEventListener("focusin", onFocus);
         return () => { sts.forEach((s) => s.kill()); track.removeEventListener("focusin", onFocus); };
       },
-      "(max-width: 759px)": () => {
+      "(max-width: 759px), (max-aspect-ratio: 1/1)": () => {
+        scroller.scrollLeft = 0;
+        const prog = sec.querySelector(".hprogress"), bar = prog && prog.querySelector("i"), count = prog && prog.querySelector(".count");
+        const cards = [...track.querySelectorAll(".module")];
+        const onScroll = () => {
+          if (!prog) return;
+          const max = Math.max(1, scroller.scrollWidth - scroller.clientWidth), p = Math.min(1, scroller.scrollLeft / max);
+          bar.style.transform = `scaleX(${p})`;
+          const n = Math.min(cards.length, Math.max(1, Math.round(p * (cards.length - 1)) + 1));
+          const txt = p > 0.97 ? "Fin du parcours" : `Module ${n} sur ${cards.length}`;
+          if (count.textContent !== txt) count.textContent = txt;
+        };
+        scroller.addEventListener("scroll", onScroll, { passive: true }); onScroll();
         const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { drawOne(e.target); io.unobserve(e.target); } }), { root: scroller, threshold: 0.4 });
         figs.forEach((f) => io.observe(f));
-        return () => io.disconnect();
+        return () => { io.disconnect(); scroller.removeEventListener("scroll", onScroll); };
       }
     });
   }

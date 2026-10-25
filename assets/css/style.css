@@ -87,7 +87,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 400; text-wrap: balance; }
 .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 p { margin: 0; max-width: 64ch; }
 .prose > * + * { margin-top: 1em; }
-.todo { color: var(--lanterne); border-bottom: 1px dashed currentColor; }
+.todo { color: var(--calcaire-2); font-style: italic; border-bottom: 1px dotted var(--calcaire-3); }
 .todo-block { border: 1px dashed var(--lanterne); color: var(--lanterne-2); padding: .9em 1.1em; font-size: var(--t-s); }
 
 /* ---------- Mise en page ---------- */
@@ -99,7 +99,7 @@ p { margin: 0; max-width: 64ch; }
   padding-right: calc(var(--gutter-r) + var(--axis-w));
 }
 @media (min-width: 760px) { .wrap { padding-left: max(40px, env(safe-area-inset-left, 0px)); padding-right: calc(max(40px, env(safe-area-inset-right, 0px)) + var(--axis-w)); } }
-.section { padding-block: clamp(80px, 12vw, 180px); position: relative; }
+.section { padding-block: clamp(64px, 8vw, 128px); position: relative; }
 .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 36px); }
 .grid > * { min-width: 0; }
 .stack { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -175,8 +175,7 @@ p { margin: 0; max-width: 64ch; }
 /* ---------- Réticule (curseur) ---------- */
 .crosshair { position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: 0; transition: opacity .3s; }
 .has-crosshair .crosshair.on { opacity: 1; }
-.has-crosshair, .has-crosshair a, .has-crosshair button, .has-crosshair input, .has-crosshair select, .has-crosshair label, .has-crosshair summary { cursor: none; }
-.has-crosshair input[type="text"], .has-crosshair input[type="email"], .has-crosshair input[type="number"], .has-crosshair input[type="search"], .has-crosshair textarea { cursor: text; }
+.cross-active, .cross-active * { cursor: none; }
 .crosshair .h, .crosshair .v { position: absolute; background-image: linear-gradient(90deg, color-mix(in srgb, var(--calcaire) 34%, transparent) 50%, transparent 50%); }
 .crosshair .h { left: 0; right: 0; height: 1px; background-size: 8px 1px; }
 .crosshair .v { top: 0; bottom: 0; width: 1px; background-image: linear-gradient(180deg, color-mix(in srgb, var(--calcaire) 34%, transparent) 50%, transparent 50%); background-size: 1px 8px; }
@@ -287,8 +286,8 @@ p { margin: 0; max-width: 64ch; }
 .module h3 { font-family: var(--f-display); font-size: 1.9rem; line-height: 1.05; }
 .module p { font-size: var(--t-s); color: var(--calcaire-2); }
 .htrack .end-card { width: clamp(260px, 26vw, 360px); flex: none; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding: 28px; background: var(--mer-2); }
-@media (max-width: 760px) {
-  .hscroll { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+@media (max-width: 760px), (max-aspect-ratio: 1/1) and (max-width: 1100px) {
+  .hscroll { overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(16px, env(safe-area-inset-left, 0px)); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .hscroll::-webkit-scrollbar { display: none; }
   .module, .htrack .end-card { scroll-snap-align: start; width: 82vw; }
 }
@@ -297,7 +296,7 @@ p { margin: 0; max-width: 64ch; }
 .lantern { background: var(--encre); overflow: hidden; }
 .lantern-stage { position: relative; --x: 50%; --y: 50%; --r: 220px; }
 .lantern-text { font-family: var(--f-display); font-size: clamp(2.2rem, 1rem + 4.6vw, 5.4rem); line-height: 1.04; letter-spacing: -0.015em; max-width: 15em; margin: 0; }
-.lantern-text.dim { color: color-mix(in srgb, var(--calcaire) 13%, transparent); }
+.lantern-text.dim { color: color-mix(in srgb, var(--calcaire) 68%, transparent); }
 .lantern-text.lit { position: absolute; inset: 0; color: var(--lanterne-2);
   -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, #000 35%, transparent 100%);
           mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, #000 35%, transparent 100%);
@@ -511,7 +510,7 @@ p { margin: 0; max-width: 64ch; }
 .intro { animation: intro-safety 0s linear 6s forwards; }
 @keyframes intro-safety { to { opacity: 0; visibility: hidden; } }
 .hpin { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
-@media (max-width: 759px) { .hpin { min-height: 0; } }
+@media (max-width: 759px), (max-aspect-ratio: 1/1) { .hpin { min-height: 0; } }
 .ring-box .visuel { position: absolute; inset: 15%; border-radius: 50%; aspect-ratio: auto; opacity: .7; }
 .ring-box svg { position: relative; }
 [data-sessions-pin] { padding-block: clamp(80px, 10vw, 140px); }
@@ -618,3 +617,71 @@ input[type="range"] { accent-color: var(--lanterne); }
 .btn:disabled { opacity: .5; cursor: default; box-shadow: none; }
 .btn:disabled::before { transform: translateY(101%); }
 .lantern-text, .quiz-q, .end-card .h3 { text-wrap: balance; }
+
+/* v3 : titre du héros proportionné à la hauteur de l'écran */
+.hero .display { font-size: min(var(--t-3xl), 12.5svh); }
+@media (max-width: 760px) { .hero .display { font-size: min(var(--t-3xl), 9.5svh); } }
+
+
+/* ---------- v3 : audit complet ---------- */
+/* Règle de droite retirée : plus de marge asymétrique */
+:root { --axis-w: 0px !important; }
+.axis { display: none !important; }
+
+/* Notes de maquette discrètes : l'ambre reste réservé aux actions */
+.todo-note { color: var(--calcaire-3); }
+
+/* En-tête mobile : une vraie action, le mode calme passe dans le menu */
+.head-cta { display: none; }
+@media (max-width: 900px) {
+  .header .calm-toggle { display: none !important; }
+  .head-cta { display: inline-flex; margin-left: auto; padding: .7em 1.1em; font-size: var(--t-xs); }
+  .menu-btn { margin-left: 0; }
+}
+.mobile-nav a.btn { font-family: var(--f-body); font-size: var(--t-m); line-height: 1; align-self: flex-start; margin-top: 18px; }
+.mobile-nav .calm-toggle { display: inline-flex; }
+
+/* Tablette : deux colonnes dès 760 px au lieu d'une pile de grandes images */
+@media (min-width: 760px) and (max-width: 900px) {
+  .sessions, .forum, .member, .faq, .contact, .split, .risk-grid, .tool, .parcours-head, .trainer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.visuel.tall { max-height: 72svh; }
+
+/* Héros : texte lisible même sur les reflets les plus clairs */
+.hero .lead { text-shadow: 0 1px 18px rgba(8, 22, 27, .7); }
+@media (max-width: 760px) {
+  .hero::after { height: 62%; background: linear-gradient(to top, var(--mer) 32%, transparent); }
+}
+
+/* Composants harmonisés */
+.quiz-opts button { border-radius: 14px; }
+.steps-wrap legend.h4 { font-family: var(--f-display); font-size: var(--t-xl); font-weight: 400; letter-spacing: 0; margin-bottom: 6px; }
+.form-progress { margin-bottom: 18px; }
+@media (max-width: 760px) {
+  .steps-nav span { display: none; }
+  .steps-nav span.on { display: inline-block; }
+}
+
+/* Lexique : pas de colonne vide, lettres plus faciles à viser */
+@media (min-width: 901px) {
+  .term:has(> div:empty) { grid-template-columns: minmax(0, 4fr) minmax(0, 9fr); }
+}
+.term > div:empty { display: none; }
+.letters a, .letters span { min-width: 34px; height: 34px; font-size: 13.5px; }
+.letters span { color: color-mix(in srgb, var(--calcaire-3) 60%, transparent); }
+
+/* Qui vous forme */
+.trainer { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
+@media (max-width: 759px) { .trainer { grid-template-columns: minmax(0, 1fr); } }
+.trainer-portrait { margin: 0; aspect-ratio: 4/5; max-width: 420px; width: 100%; position: relative; display: grid; place-items: center; background: radial-gradient(120% 90% at 30% 20%, var(--mer-3), var(--mer-2) 60%, var(--encre)); border: 1px solid var(--mer-3); }
+.trainer-portrait .mono { font-family: var(--f-display); font-size: clamp(4rem, 9vw, 7rem); color: var(--calcaire-3); letter-spacing: .02em; }
+.trainer-portrait figcaption { position: absolute; left: 12px; bottom: 10px; font-size: var(--t-xs); color: var(--calcaire-3); }
+.trainer-facts { margin: 8px 0 0; display: grid; gap: 0; }
+.trainer-facts div { display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: 16px; padding: 14px 0; border-top: 1px solid var(--mer-3); }
+.trainer-facts div:last-child { border-bottom: 1px solid var(--mer-3); }
+.trainer-facts dt { color: var(--calcaire-3); font-size: var(--t-s); }
+.trainer-facts dd { margin: 0; }
+@media (max-width: 560px) { .trainer-facts div { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+@media (min-width: 761px) and (max-aspect-ratio: 1/1) and (max-width: 1100px) {
+  .module, .htrack .end-card { width: 44vw; }
+}

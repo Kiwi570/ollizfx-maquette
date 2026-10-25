@@ -29,13 +29,15 @@
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="OLLIZ FX, accueil"><span class="brand-mark" aria-hidden="true"></span><span class="w">OLLIZ</span> <span class="fx">FX</span></a>
     <nav class="nav" aria-label="Navigation principale"><a href="formation.html" aria-current="page">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a class="btn" href="formation.html#demande"><span class="tick" aria-hidden="true"></span>Demander le programme</a></nav>
+    <a class="btn head-cta" href="formation.html#demande">Le programme</a>
     <button class="calm-toggle" type="button" aria-pressed="false" title="Réduit les animations et le mouvement"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav">Menu</button>
   </div>
 </header>
 <div class="mobile-nav" id="mnav" hidden role="dialog" aria-label="Menu">
   <button class="close" type="button">Fermer</button>
-  <a href="index.html">Accueil</a><a href="formation.html">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a href="formation.html#demande">Demander le programme</a>
+  <a href="index.html">Accueil</a><a href="formation.html">Parcours</a><a href="outils.html">Outils</a><a href="lexique.html">Lexique</a><a href="index.html#contact">Contact</a><a class="btn" href="formation.html#demande"><span class="tick" aria-hidden="true"></span>Demander le programme</a>
+  <button class="calm-toggle" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span class="long">Mode calme</span><span class="short">Calme</span></button>
 </div>
 <div class="axis" aria-hidden="true"><canvas></canvas><div class="now"></div></div>
 
@@ -75,8 +77,33 @@
     </div>
   </section>
 
+
+  <section class="section" id="formateur" aria-labelledby="t-title">
+    <div class="wrap trainer">
+      <figure class="trainer-portrait" aria-label="Photo du formateur à fournir">
+        <span class="mono" aria-hidden="true">MV</span>
+        <figcaption>Photo du formateur à fournir</figcaption>
+      </figure>
+      <div class="stack">
+        <h2 id="t-title" class="h2" data-split>Qui vous forme</h2>
+        <p class="lead">Michaël Vallon, fondateur d’OLLIZ FX SERVICES, à Fréjus. <span class="todo">Rôle de formateur à confirmer</span></p>
+        <dl class="trainer-facts">
+          <div><dt>Parcours</dt><dd><span class="todo">Expérience du marché et de la formation à compléter</span></dd></div>
+          <div><dt>Activité</dt><dd>Formation uniquement : pas de conseil en investissement personnalisé, pas de gestion de fonds.</dd></div>
+          <div><dt>Courtiers</dt><dd><span class="todo">Préciser tout partenariat ou toute rémunération versée par un courtier</span></dd></div>
+          <div><dt>Questions</dt><dd>Dans le chat de l’espace membre. <span class="todo">Délai de réponse à préciser</span></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="niveau" aria-labelledby="n-title">
     <div class="wrap split" style="align-items:start">
+      <div class="stack">
+        <h2 id="n-title" class="h2" data-split>Par où commencer ?</h2>
+        <p class="muted">Six questions, une minute. Le test vous oriente vers le niveau débutant ou intermédiaire. Il ne remplace pas un échange avec le formateur.</p>
+        <figure class="visuel " data-scene="carnet" data-img="formation-niveau" data-alt="Carnet de test de niveau, cases cochées au crayon" data-draw data-clip style="--ratio: 4/3"></figure>
+      </div>
       <div class="quiz" id="quiz">
         <div class="quiz-progress" aria-hidden="true"><i style="width:0%"></i></div>
         <div class="quiz-body">
@@ -91,11 +118,6 @@
           <div class="row mt-m"><a class="btn" href="#demande" data-r-go>Demander ce parcours</a><button class="btn ghost" type="button" data-r-again>Refaire le test</button></div>
         </div>
       </div>
-      <div class="stack">
-        <h2 id="n-title" class="h2" data-split>Par où commencer ?</h2>
-        <p class="muted">Six questions, une minute. Le test vous oriente vers le niveau débutant ou intermédiaire. Il ne remplace pas un échange avec le formateur.</p>
-        <figure class="visuel " data-scene="carnet" data-img="parcours-carnet" data-alt="Carnet ouvert avec des bougies dessinées au crayon" data-draw data-clip style="--ratio: 4/3"></figure>
-      </div>
     </div>
   </section>
 
@@ -103,11 +125,12 @@
     <div class="wrap split" style="align-items:start">
       <div class="stack">
         <h2 id="i-title" class="h2" data-split>Demander le programme</h2>
-        <p class="muted">Trois étapes pour préciser votre niveau et vos disponibilités. OLLIZ FX revient vers vous avec le programme détaillé.</p>
-        <figure class="visuel " data-scene="ecran" data-img="membre-ecran" data-alt="Écran affichant un graphique dans une pièce sombre" data-clip style="--ratio: 4/3"></figure>
+        <p class="muted">Trois questions courtes, puis une vérification avant l’envoi. OLLIZ FX revient vers vous avec le programme détaillé.</p>
+        <figure class="visuel " data-scene="fiches" data-img="formation-programme" data-alt="Programme de formation imprimé, posé sur une table" data-clip style="--ratio: 4/3"></figure>
       </div>
       <form class="form quiz" id="inscription" novalidate aria-label="Demande d’inscription">
         <div class="steps-wrap">
+          <div class="quiz-progress form-progress" aria-hidden="true"><i></i></div>
           <div class="steps-nav" aria-hidden="true"><span>1. Niveau</span><span>2. Disponibilités</span><span>3. Coordonnées</span><span>4. Vérification</span></div>
           <fieldset data-step style="border:0;padding:0;margin:0" class="form">
             <legend class="h4">Votre niveau</legend>
@@ -149,7 +172,8 @@
         </div>
         <div data-done hidden tabindex="-1" class="stack">
           <p class="h3">Demande enregistrée.</p>
-          <p class="muted">Dans cette maquette, rien n’est envoyé. La version en ligne transmettra votre demande à OLLIZ FX, qui vous enverra le programme détaillé.</p>
+          <p class="muted">Dans cette maquette, rien n’est envoyé. La version en ligne transmettra votre demande à OLLIZ FX, qui vous enverra le programme détaillé. <span class="todo">Délai de réponse à préciser</span></p>
+          <div class="row"><a class="btn ghost" href="#niveau">Faire le test de niveau</a><a class="btn ghost" href="lexique.html">Parcourir le lexique</a></div>
         </div>
 </form>
     </div>
@@ -159,7 +183,7 @@
   <div class="wrap">
     <div class="footer-top">
       <div>
-        <h2>Apprendre avant d’engager un euro.</h2>
+        <h2>Le risque se mesure. Le reste s’apprend.</h2>
         <p class="muted mt-s">OLLIZ FX SERVICES, formation au trading sur le marché des changes, à Fréjus.</p>
         <div class="row mt-m"><a class="btn" href="formation.html#demande"><span class="tick" aria-hidden="true"></span>Demander le programme</a></div>
       </div>

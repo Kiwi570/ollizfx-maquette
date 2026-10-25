@@ -431,14 +431,66 @@
   }
   S.paire = function (ctx, w, h, r, p) {
     miniBase(ctx, w, h); p = p == null ? 1 : p;
-    const R = Math.min(w, h) * 0.24, cy = h * 0.5, off = R * 0.62 * p;
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = C.hausse; ctx.beginPath(); ctx.arc(w / 2 - off, cy, R, 0, Math.PI * 2); ctx.stroke();
-    ctx.strokeStyle = C.lanterne; ctx.beginPath(); ctx.arc(w / 2 + off, cy, R, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = C.calcaire; ctx.font = `400 ${Math.round(R * 0.5)}px "Instrument Serif", Georgia, serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.globalAlpha = p; ctx.fillText("EUR", w / 2 - off - R * 0.2, cy); ctx.fillText("USD", w / 2 + off + R * 0.2, cy); ctx.globalAlpha = 1;
-    ctx.font = `500 ${Math.round(R * 0.22)}px "Geist Mono", monospace`; ctx.fillStyle = C.calcaire2;
-    ctx.fillText("1,1002 / 1,1004", w / 2, h * 0.86);
+    const u = Math.min(w, h), cx = w / 2;
+    const big = Math.round(u * 0.2), small = Math.max(10, Math.round(u * 0.058));
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "center";
+    ctx.globalAlpha = Math.min(1, p * 1.6);
+    ctx.font = `400 ${big}px "Instrument Serif", Georgia, serif`;
+    const t1 = "EUR", t2 = "USD", gap = big * 0.55;
+    const w1 = ctx.measureText(t1).width, w2 = ctx.measureText(t2).width;
+    const x1 = cx - gap / 2 - w1 / 2, x2 = cx + gap / 2 + w2 / 2, by = h * 0.4;
+    ctx.fillStyle = C.hausse; ctx.fillText(t1, x1, by);
+    ctx.fillStyle = C.calcaire2; ctx.fillText("/", cx, by);
+    ctx.fillStyle = C.lanterne; ctx.fillText(t2, x2, by);
+    ctx.font = `500 ${small}px "Geist", system-ui, sans-serif`;
+    ctx.fillStyle = C.calcaire2;
+    ctx.fillText("base", x1, by + small * 1.6); ctx.fillText("cotation", x2, by + small * 1.6);
+    ctx.globalAlpha = 1;
+    // cotation bid / ask et spread
+    const q = Math.max(0, Math.min(1, (p - 0.35) / 0.65));
+    if (q > 0) {
+      const bw = w * 0.34, bh = u * 0.17, y = h * 0.62, gx = w * 0.04;
+      const boxes = [{ x: cx - gx / 2 - bw, label: "Bid", v: "1,1002", c: C.baisse }, { x: cx + gx / 2, label: "Ask", v: "1,1004", c: C.hausse }];
+      ctx.globalAlpha = q;
+      boxes.forEach((b) => {
+        ctx.strokeStyle = alpha(b.c, 0.9); ctx.lineWidth = 1.2; ctx.strokeRect(b.x, y, bw, bh);
+        ctx.fillStyle = alpha(b.c, 0.12); ctx.fillRect(b.x, y, bw, bh);
+        ctx.textAlign = "left"; ctx.font = `500 ${small}px "Geist Mono", monospace`; ctx.fillStyle = C.calcaire2; ctx.fillText(b.label, b.x + 8, y + small * 1.3);
+        ctx.textAlign = "right"; ctx.font = `500 ${Math.round(small * 1.25)}px "Geist Mono", monospace`; ctx.fillStyle = C.calcaire; ctx.fillText(b.v, b.x + bw - 8, y + bh - 8);
+      });
+      ctx.textAlign = "center"; ctx.font = `500 ${small}px "Geist", sans-serif`; ctx.fillStyle = C.lanterne2;
+      ctx.fillText("spread 0,2 pip", cx, y + bh + small * 1.7);
+      ctx.globalAlpha = 1;
+    }
+  };
+  S.fondamental = function (ctx, w, h, r, p) {
+    miniBase(ctx, w, h); p = p == null ? 1 : p;
+    const rows = [["08:00", "EUR", 1, "Indice des prix"], ["10:30", "GBP", 2, "Emploi"], ["14:00", "USD", 3, "Décision de taux"], ["16:30", "USD", 1, "Stocks"]];
+    const fs = Math.max(9, Math.round(Math.min(w, h) * 0.05)), lh = fs * 2.1, x0 = w * 0.06, y0 = h * 0.12;
+    ctx.textBaseline = "middle";
+    rows.forEach((row, k) => {
+      const show = Math.max(0, Math.min(1, p * 4 - k * 0.6)); if (!show) return;
+      const y = y0 + k * lh, hi = row[2] === 3;
+      ctx.globalAlpha = show;
+      if (hi) { ctx.fillStyle = alpha(C.lanterne, 0.14); ctx.fillRect(x0 - 6, y - lh * 0.45, w * 0.88 + 12, lh * 0.9); }
+      ctx.font = `500 ${fs}px "Geist Mono", monospace`; ctx.textAlign = "left";
+      ctx.fillStyle = C.calcaire2; ctx.fillText(row[0], x0, y);
+      ctx.fillStyle = hi ? C.lanterne2 : C.calcaire; ctx.fillText(row[1], x0 + fs * 3.6, y);
+      ctx.font = `400 ${fs}px "Geist", sans-serif`; ctx.fillText(row[3], x0 + fs * 6.4, y);
+      for (let d = 0; d < 3; d++) { ctx.fillStyle = d < row[2] ? (hi ? C.lanterne : C.calcaire2) : C.mer3; ctx.beginPath(); ctx.arc(w * 0.88 - (2 - d) * fs * 0.9, y, fs * 0.28, 0, Math.PI * 2); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    });
+    // le prix réagit à l'annonce à fort impact
+    const top = y0 + rows.length * lh + fs * 0.6, bot = h * 0.94, mid = (top + bot) / 2, ex = w * 0.58;
+    const q = Math.max(0, Math.min(1, (p - 0.3) / 0.7));
+    ctx.strokeStyle = alpha(C.lanterne, 0.7); ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(ex, top); ctx.lineTo(ex, bot); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = C.calcaire; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let x = w * 0.06; x <= w * 0.06 + w * 0.88 * q; x += 3) {
+      const after = x > ex ? Math.min(1, (x - ex) / (w * 0.05)) : 0;
+      const y = mid + Math.sin(x * 0.09) * (bot - top) * 0.05 * (1 - after * 0.4) - after * (bot - top) * 0.36 + (after ? Math.sin(x * 0.3) * (bot - top) * 0.06 : 0);
+      x === w * 0.06 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.lineWidth = 1;
   };
   S.chandeliers = function (ctx, w, h, r, p) {
     miniBase(ctx, w, h);
@@ -469,17 +521,6 @@
     ctx.strokeStyle = C.calcaire; ctx.lineWidth = 1.6; ctx.beginPath();
     for (let x = 0; x <= w * p; x += 4) { const y = h * 0.49 + Math.sin(x * 0.045) * h * 0.19 + Math.sin(x * 0.13) * h * 0.03; x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
     ctx.stroke();
-  };
-  S.fondamental = function (ctx, w, h, r, p) {
-    miniBase(ctx, w, h); p = p == null ? 1 : p;
-    const cols = 7, rows = 4, cw = w * 0.8 / cols, ch = h * 0.5 / rows, x0 = w * 0.1, y0 = h * 0.12;
-    for (let i = 0; i < cols * rows; i++) {
-      const x = x0 + (i % cols) * cw, y = y0 + Math.floor(i / cols) * ch;
-      ctx.strokeStyle = "rgba(169,186,182,0.25)"; ctx.strokeRect(x + 2, y + 2, cw - 4, ch - 4);
-      if (i === 17) { ctx.fillStyle = alpha(C.lanterne, 0.85 * p); ctx.fillRect(x + 2, y + 2, cw - 4, ch - 4); }
-    }
-    ctx.strokeStyle = C.calcaire; ctx.lineWidth = 1.5; ctx.beginPath();
-    for (let x = 0; x <= w * p; x += 4) { const spike = Math.exp(-Math.pow((x - w * 0.6) / (w * 0.03), 2)) * h * 0.18; const y = h * 0.85 - spike + Math.sin(x * 0.2) * 2; x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
   };
   S.plan = function (ctx, w, h, r, p) {
     miniBase(ctx, w, h); p = p == null ? 1 : p;
@@ -530,7 +571,7 @@
         img.src = `assets/img/${name}.webp`;
         img.srcset = `assets/img/${name}-800.webp 800w, assets/img/${name}.webp ${imgs[name].w || 1800}w`;
         fig.classList.add("has-img");
-        img.sizes = fig.dataset.sizes || "100vw";
+        { const fw = Math.ceil(fig.getBoundingClientRect().width); img.sizes = fig.dataset.sizes || (fw > 0 ? fw + "px" : "100vw"); }
         if (imgs[name + "-mobile"]) {
           const pic = document.createElement("picture"), src = document.createElement("source");
           src.media = "(max-width: 760px)"; src.srcset = `assets/img/${name}-mobile.webp`; fig.classList.add("has-mobile");
