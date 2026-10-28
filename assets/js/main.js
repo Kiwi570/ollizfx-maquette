@@ -368,6 +368,10 @@
       g("line", { x1, y1, x2, y2, stroke: "rgba(169,186,182,0.45)", "stroke-width": 1 });
       if (h % 3 === 0) { const [tx, ty] = polar(200, 200, 204, h); const t = g("text", { x: tx, y: ty, "text-anchor": "middle", "dominant-baseline": "middle", fill: "#86a19f", "font-size": 11, "font-family": "Geist Mono, monospace" }); t.textContent = String(h).padStart(2, "0"); }
     }
+    // graduations : au moins 12 px à l'écran, quelle que soit la réduction du viewBox (448 unités)
+    const ticks = [...svg.querySelectorAll("text")];
+    const sizeTicks = () => { const w = svg.getBoundingClientRect().width; if (!w) return; const fs = Math.max(11, (12 * 448) / w).toFixed(1); ticks.forEach((t) => t.setAttribute("font-size", fs)); };
+    sizeTicks(); if ("ResizeObserver" in window) new ResizeObserver(sizeTicks).observe(svg);
     const radii = [160, 140, 120, 100];
     const arcs = wins.map((s, i) => {
       g("circle", { cx: 200, cy: 200, r: radii[i], fill: "none", stroke: "rgba(29,64,76,0.9)", "stroke-width": 12 });
@@ -418,6 +422,19 @@
     return api;
   };
   document.querySelectorAll("[data-sessions]").forEach((el) => { el._api = O.mountSessions(el); });
+
+  /* Carte de contact : étiquettes à 12 px minimum à l'écran, cartouche élargi au besoin */
+  document.querySelectorAll(".map svg").forEach((svg) => {
+    const vb = svg.viewBox.baseVal.width || 400, labels = [...svg.querySelectorAll("text")];
+    const box = svg.querySelector("rect[x]"), boxW = box ? +box.getAttribute("width") : 0;
+    const inBox = box ? labels.filter((t) => +t.getAttribute("x") > +box.getAttribute("x") && +t.getAttribute("x") < +box.getAttribute("x") + boxW) : [];
+    const size = () => {
+      const w = svg.getBoundingClientRect().width; if (!w) return;
+      const fs = Math.max(11, (12 * vb) / w).toFixed(1); labels.forEach((t) => (t.style.fontSize = fs + "px"));
+      if (inBox.length) { const need = Math.max(...inBox.map((t) => t.getComputedTextLength())) + 16; box.setAttribute("width", Math.max(boxW, Math.ceil(need))); }
+    };
+    size(); if ("ResizeObserver" in window) new ResizeObserver(size).observe(svg);
+  });
 
   /* Lectures du héros (heure, marché, sessions actives) */
   const readout = document.querySelector("[data-readout]");

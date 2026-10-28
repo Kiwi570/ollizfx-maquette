@@ -149,9 +149,10 @@
       stage.addEventListener("pointermove", (e) => { if (!manual) { manual = true; sweep.pause(); } const b = r(); setX(e.clientX - b.left); setY(e.clientY - b.top); });
     }
     const rTo = () => Math.hypot(r().width, r().height) * 1.1;
+    // --k suit --r pour le faisceau (600 px de base = 3 × 200 px)
     G.timeline({ scrollTrigger: { trigger: stage, start: "top 80%", end: "bottom 20%", scrub: true } })
-      .fromTo(stage, { "--r": "120px" }, { "--r": "280px", ease: "none", duration: 0.6 })
-      .to(stage, { "--r": () => rTo() + "px", ease: "power2.in", duration: 0.4 });
+      .fromTo(stage, { "--r": "120px", "--k": 0.6 }, { "--r": "280px", "--k": 1.4, ease: "none", duration: 0.6 })
+      .to(stage, { "--r": () => rTo() + "px", "--k": () => rTo() / 200, ease: "power2.in", duration: 0.4 });
   }
 
   /* ---------- La règle du 1 % ---------- */
@@ -220,7 +221,8 @@
     }
     build(); let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(build, 150); });
     if (still || !ST) return;
-    ST.create({ trigger: box, start: "top 80%", end: "center 45%", scrub: 0.5, onUpdate: (self) => { prog = self.progress * 1.12; draw(); } });
+    // redessin seulement quand la progression a bougé de plus de 0,5 %
+    ST.create({ trigger: box, start: "top 80%", end: "center 45%", scrub: 0.5, onUpdate: (self) => { const p = self.progress * 1.12; if (Math.abs(p - prog) < 0.005 && p !== 0 && self.progress !== 1) return; prog = p; draw(); } });
   }
 
   /* ---------- Chat de démonstration ---------- */

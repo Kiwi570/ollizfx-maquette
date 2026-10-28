@@ -2,7 +2,7 @@
 (function () {
   const O = window.OLLIZ; const G = window.gsap; const still = O.still || !G;
   const T = { up: "style=\"stroke:var(--hausse)\"", down: "style=\"stroke:var(--baisse)\"", lamp: "style=\"stroke:var(--lanterne)\"", ink: "style=\"stroke:var(--calcaire)\"", mute: "style=\"stroke:var(--mer-4)\"" };
-  const txt = (x, y, s, anchor, color) => `<text x="${x}" y="${y}" text-anchor="${anchor || "start"}" style="fill:var(${color || "--calcaire-2"});font:500 10px 'Geist Mono',monospace">${s}</text>`;
+  const txt = (x, y, s, anchor, color) => `<text x="${x}" y="${y}" text-anchor="${anchor || "start"}" style="fill:var(${color || "--calcaire-2"});font:500 12px 'Geist Mono',monospace">${s}</text>`;
   const DIA = {
     spread: `<svg viewBox="0 0 240 110" role="img" aria-label="Schéma : l’ask au-dessus, le bid en dessous, le spread entre les deux">
       <line x1="10" y1="36" x2="190" y2="36" ${T.up} stroke-width="1.5" class="draw"/>${txt(196, 39, "Ask")}
@@ -23,7 +23,7 @@
     rr: `<svg viewBox="0 0 240 120" role="img" aria-label="Schéma : risque de 1 sous l’entrée, objectif de 2 au-dessus">
       <rect x="20" y="20" width="150" height="56" style="fill:var(--hausse);opacity:.16"/><rect x="20" y="76" width="150" height="28" style="fill:var(--baisse);opacity:.18"/>
       <line x1="20" y1="76" x2="170" y2="76" ${T.lamp} stroke-width="1.5" class="draw"/>
-      ${txt(176, 24, "Objectif : 2")}${txt(176, 80, "Entrée")}${txt(176, 106, "Stop : 1")}</svg>`,
+      ${txt(236, 14, "Objectif : 2", "end")}${txt(176, 80, "Entrée")}${txt(176, 106, "Stop : 1")}</svg>`,
     sr: `<svg viewBox="0 0 240 110" role="img" aria-label="Schéma : le prix rebondit entre un support et une résistance">
       <rect x="0" y="18" width="240" height="12" style="fill:var(--baisse);opacity:.18"/><rect x="0" y="80" width="240" height="12" style="fill:var(--hausse);opacity:.18"/>
       <polyline points="6,70 36,26 66,84 98,24 128,86 160,28 190,82 230,20" fill="none" ${T.ink} stroke-width="1.5" class="draw"/>

@@ -554,10 +554,14 @@
     const w = Math.round(rect.width), h = Math.round(rect.height);
     if (canvas._w === w && canvas._h === h && canvas._p === fig._p) return;
     canvas._w = w; canvas._h = h; canvas._p = fig._p;
-    canvas.width = w * dpr; canvas.height = h * dpr;
-    const ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const ctx = canvas.getContext("2d");
+    if (canvas.width !== w * dpr || canvas.height !== h * dpr) { canvas.width = w * dpr; canvas.height = h * dpr; }
+    else { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const fn = S[fig.dataset.scene] || S.mer;
+    ctx.save(); // état du contexte rendu intact pour le dessin suivant (le canvas n'est plus réinitialisé)
     fn(ctx, w, h, rng(hashStr(fig.dataset.img || fig.dataset.scene || "x")), fig._p, fig.dataset);
+    ctx.restore();
   }
 
   function mount(root) {
